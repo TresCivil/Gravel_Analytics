@@ -796,7 +796,7 @@ var G = (function () {
   const str = v => (v == null ? '' : String(v).trim());
 
   /* ---------- state ---------- */
-  const S = { overRule:'hauled', royaltyAmounts:false, demo:false, TODAY:'', CUR:0, CURM:1, pits:[], CRUSH:[], HAUL:[], ROADS:[], YEARS:[], PMT:{}, HMT:{}, SMT:{}, recent:[],
+  const S = { OFF:{}, OFFT:0, overRule:'hauled', royaltyAmounts:false, demo:false, TODAY:'', CUR:0, CURM:1, pits:[], CRUSH:[], HAUL:[], ROADS:[], YEARS:[], PMT:{}, HMT:{}, SMT:{}, recent:[],
               bookings:null, bstock:null, royalty:null, period:'', owners:null, licences:null, valuePerT:20, hasLoads:false };
 
   function readHash() {
@@ -836,7 +836,10 @@ var G = (function () {
     S.YEARS.forEach(y => { S.PMT[y] = new Array(12).fill(0); S.HMT[y] = new Array(12).fill(0); });
     S.CRUSH.forEach(e => { if (S.PMT[e.y]) S.PMT[e.y][e.m - 1] += e.t; });
     S.HAUL.forEach(e => { if (S.HMT[e.y]) S.HMT[e.y][e.m - 1] += e.t; });
-    let run = 0; S.YEARS.forEach(y => { S.SMT[y] = []; for (let m = 0; m < 12; m++) { run += S.PMT[y][m] - S.HMT[y][m]; S.SMT[y].push(y === S.CUR && m >= S.CURM ? null : run); } });
+    /* opening stock: if a pit sends its stockpile on hand today, the logs' running total is lined up to it */
+    S.OFF = {}; S.OFFT = 0;
+    S.pits.forEach(p => { if (p.stock == null) return; const calc = sum(S.CRUSH.filter(e => e.pit === p.id).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === p.id).map(e => e.t)); S.OFF[p.id] = p.stock - calc; S.OFFT += S.OFF[p.id]; });
+    let run = S.OFFT; S.YEARS.forEach(y => { S.SMT[y] = []; for (let m = 0; m < 12; m++) { run += S.PMT[y][m] - S.HMT[y][m]; S.SMT[y].push(y === S.CUR && m >= S.CURM ? null : run); } });
 
     S.recent = (P.recent || []).map(r => ({ d:isoOf(r.d), pit:str(r.p), road:str(r.r), t:num(r.t) || 0 })).filter(r => r.d).sort((a, b) => D(b.d) - D(a.d));
 
@@ -875,8 +878,8 @@ var G = (function () {
   const haulY = (y, f) => sum(haulM(y, f));
   const ytd = id => prodY(S.CUR, id);
   const monthsAvail = y => (y < S.CUR ? 12 : S.CURM);
-  const stockAt = y => sum(S.CRUSH.filter(e => e.y <= y).map(e => e.t)) - sum(S.HAUL.filter(e => e.y <= y).map(e => e.t));
-  const stockAtP = (y, id) => sum(S.CRUSH.filter(e => e.pit === id && e.y <= y).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === id && e.y <= y).map(e => e.t));
+  const stockAt = y => S.OFFT + sum(S.CRUSH.filter(e => e.y <= y).map(e => e.t)) - sum(S.HAUL.filter(e => e.y <= y).map(e => e.t));
+  const stockAtP = (y, id) => (S.OFF[id] || 0) + sum(S.CRUSH.filter(e => e.pit === id && e.y <= y).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === id && e.y <= y).map(e => e.t));
   /* loads: the real count when Power Apps sends it, otherwise about 24.6 t a load as in the original */
   const loadsOf = t => Math.round(t / 24.6);
   const loadsWhere = f => { const rows = (S.ROADS.length ? S.ROADS : S.HAUL).filter(f); return S.hasLoads ? Math.round(sum(rows.map(e => (e.n != null ? e.n : e.t / 24.6)))) : loadsOf(sum(rows.map(e => e.t))); };
@@ -956,11 +959,12 @@ var G = (function () {
 
   /* ---------- chart helpers (inline SVG, no libraries) ---------- */
   const niceStep = v => { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
-  const scale = mx => { if (!(mx > 0)) mx = 10; const st = niceStep(mx / 4); return { step:st, max:Math.ceil(mx / st) * st }; };
-  const shortN = v => (v >= 1000 ? (Math.round(v / 100) / 10) + 'k' : String(Math.round(v)));
+  const scale = (mx, mn) => { mn = Math.min(0, mn || 0); if (!(mx > 0)) mx = mn < 0 ? 0 : 10; const st = niceStep(((mx - mn) || 10) / (mn < 0 ? 5 : 4)); return { step:st, min:Math.floor(mn / st) * st, max:Math.ceil(mx / st) * st }; };
+  const shortN = v => (Math.abs(v) >= 1000 ? (v < 0 ? '-' : '') + (Math.round(Math.abs(v) / 100) / 10) + 'k' : String(Math.round(v)));
   function axis(sc, w, h, L, Rr, T, ih) {
     let s = '';
-    for (let v = 0; v <= sc.max + 1e-9; v += sc.step) { const yy = T + ih - v / sc.max * ih; s += '<line x1="' + L + '" x2="' + (w - Rr) + '" y1="' + yy + '" y2="' + yy + '" stroke="' + C.grid + '"/><text x="' + (L - 6) + '" y="' + (yy + 3.5) + '" text-anchor="end" font-size="10" fill="' + C.mute + '">' + shortN(v) + '</text>'; }
+    const lo = sc.min || 0, span = (sc.max - lo) || 1;
+    for (let v = lo; v <= sc.max + 1e-9; v += sc.step) { const yy = T + ih - (v - lo) / span * ih; s += '<line x1="' + L + '" x2="' + (w - Rr) + '" y1="' + yy + '" y2="' + yy + '" stroke="' + (Math.abs(v) < 1e-9 && lo < 0 ? '#B8BFD3' : C.grid) + '"/><text x="' + (L - 6) + '" y="' + (yy + 3.5) + '" text-anchor="end" font-size="10" fill="' + C.mute + '">' + shortN(v) + '</text>'; }
     return s;
   }
   function colChart(cats, series, o) {
@@ -985,8 +989,8 @@ var G = (function () {
   function lineChart(cats, series, o) {
     o = o || {}; const w = o.w || 620, h = o.h || 230, L = 46, Rr = 16, T = 12, Bt = 26, iw = w - L - Rr, ih = h - T - Bt;
     const vals = [].concat.apply([], series.map(s => s.vals.filter(v => v != null)));
-    const mx = Math.max.apply(null, [1].concat(vals, o.hline ? [o.hline.v * 1.02] : []));
-    const sc = scale(mx * 1.04), n = cats.length, X = i => L + iw * (n === 1 ? 0.5 : i / (n - 1)), Y = v => T + ih - v / sc.max * ih;
+    const mx = Math.max.apply(null, [1].concat(vals, o.hline ? [o.hline.v * 1.02] : [])), mn = Math.min.apply(null, [0].concat(vals));
+    const sc = scale(mx * 1.04, mn < 0 ? mn * 1.04 : 0), n = cats.length, X = i => L + iw * (n === 1 ? 0.5 : i / (n - 1)), Y = v => T + ih - (v - sc.min) / ((sc.max - sc.min) || 1) * ih;
     let s = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" style="display:block;height:auto;">' + axis(sc, w, h, L, Rr, T, ih);
     cats.forEach((c, i) => { if (i % (o.labelEvery || 1) === 0) s += '<text x="' + X(i) + '" y="' + (h - 8) + '" text-anchor="middle" font-size="10" fill="' + C.mute + '">' + c + '</text>'; });
     if (o.hline) s += '<line x1="' + L + '" x2="' + (w - Rr) + '" y1="' + Y(o.hline.v) + '" y2="' + Y(o.hline.v) + '" stroke="' + C.r + '" stroke-width="1.5" stroke-dasharray="5 4"/><text x="' + (w - Rr) + '" y="' + (Y(o.hline.v) - 5) + '" text-anchor="end" font-size="10" font-weight="700" fill="' + C.r + '">' + o.hline.label + '</text>';
@@ -1148,7 +1152,7 @@ var G = (function () {
   const inYear = (arr, y) => (F.m ? ((!F.y || F.y === y) ? arr[F.m - 1] : 0) : sum(arr.slice(0, cutM())));
   /* running stockpile (crushed less hauled, all years) for all pits or one pit */
   function stockSeries(pit) {
-    const out = {}; let run = 0;
+    const out = {}; let run = pit ? (S.OFF[pit] || 0) : S.OFFT;
     S.YEARS.forEach(y => {
       const p = prodM(y, pit || undefined), h = pit ? haulM(y, e => e.pit === pit) : haulM(y);
       out[y] = []; for (let m = 0; m < 12; m++) { run += p[m] - h[m]; out[y].push(y === S.CUR && m >= S.CURM ? null : run); }
@@ -1156,7 +1160,7 @@ var G = (function () {
     return out;
   }
   /* stock at the end of a given year+month for one pit */
-  const stockAtPM = (pit, y, m) => sum(S.CRUSH.filter(e => e.pit === pit && (e.y < y || (e.y === y && e.m <= m))).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === pit && (e.y < y || (e.y === y && e.m <= m))).map(e => e.t));
+  const stockAtPM = (pit, y, m) => (S.OFF[pit] || 0) + sum(S.CRUSH.filter(e => e.pit === pit && (e.y < y || (e.y === y && e.m <= m))).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === pit && (e.y < y || (e.y === y && e.m <= m))).map(e => e.t));
   const loadsF = f => {
     const base = F.road ? S.ROADS.filter(e => e.road === F.road) : (S.ROADS.length && !F.pit ? S.ROADS : (S.ROADS.length && roadsHavePit() ? S.ROADS.filter(e => e.pit === F.pit) : S.HAUL.filter(e => !F.pit || e.pit === F.pit)));
     const rows = base.filter(f);
@@ -1270,7 +1274,7 @@ var G = (function () {
     const stockEnd = selIdx >= 0 ? (sk[selIdx] || 0) : (sk[sk.length - 1] || 0);
     const stockLab = selIdx >= 0 ? 'at end of ' + MON[F.m - 1] + ' ' + (F.y || last) : (last === S.CUR ? 'today' : 'at 31 Dec ' + last);
     const hCov = F.road ? tl.map(p => (F.pit ? haulM(p.y, e => e.pit === F.pit) : haulM(p.y))[p.m - 1]) : hl;
-    const upto = selIdx >= 0 ? selIdx + 1 : hl.length, h3 = hCov.slice(Math.max(0, upto - 3), upto), avgH = h3.length ? sum(h3) / h3.length : 0, cover = avgH > 0 ? stockEnd / avgH : null;
+    const upto = selIdx >= 0 ? selIdx + 1 : hl.length, h3 = hCov.slice(Math.max(0, upto - 3), upto), avgH = h3.length ? sum(h3) / h3.length : 0, cover = avgH > 0 && stockEnd > 0 ? stockEnd / avgH : null;
     const due = sum(rows.map(r => r.due || 0)), paid = sum(rows.map(r => r.paid));
     const scope = (F.m ? ' · ' + monthLabel() : '') + (F.road ? ' · ' + F.road : '');
 
@@ -1301,7 +1305,7 @@ var G = (function () {
     /* continuous crushed, hauled, stockpile timeline (click a point) */
     const trend = sk.length > 3 ? (sk[upto - 1] || 0) - (sk[Math.max(0, upto - 4)] || 0) : null, many = tl.length > 14;
     h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Crushed, hauled and stockpile' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One continuous timeline for the selected years. The stockpile is everything crushed less everything hauled, so it carries over from month to month.' + (F.road ? ' Hauled shows ' + esc(F.road) + ' only.' : '') + '</div></div></div>' +
-      '<div class="mini-row"><div><b>' + fmtN(stockEnd) + ' t</b><span>stockpile ' + stockLab + '</span></div><div><b>' + (cover ? cover.toFixed(1) : '-') + '</b><span>months of cover at the last 3 months of haulage</span></div><div><b style="color:' + (trend != null && trend > 0 ? C.a : C.g) + ';">' + (trend == null ? '-' : (trend > 0 ? '+' : '') + fmtN(trend) + ' t') + '</b><span>' + (trend != null && trend > 0 ? 'rising over 3 months: crushing is ahead of haulage' : 'change over 3 months') + '</span></div></div>' +
+      '<div class="mini-row"><div><b>' + fmtN(stockEnd) + ' t</b><span>stockpile ' + stockLab + (stockEnd < 0 ? '<em style="display:block;font-style:normal;font-weight:600;font-size:11.5px;color:' + C.r + ';margin-top:2px;">Below zero: more hauled than crushed in the logs</em>' : '') + '</span></div><div><b>' + (cover ? cover.toFixed(1) : '-') + '</b><span>months of cover at the last 3 months of haulage</span></div><div><b style="color:' + (trend != null && trend > 0 ? C.a : C.g) + ';">' + (trend == null ? '-' : (trend > 0 ? '+' : '') + fmtN(trend) + ' t') + '</b><span>' + (trend != null && trend > 0 ? 'rising over 3 months: crushing is ahead of haulage' : 'change over 3 months') + '</span></div></div>' +
       lineChart(tl.map(p => mLab(p.y, p.m)), [{ name:'Crushed', color:C.v, vals:cr }, { name:'Hauled', color:C.b, vals:hl }, { name:'Stockpile at month end', color:C.a, dash:true, vals:sk }], { w:1000, h:270, labelEvery:many ? 3 : 1, nodots:many, tipCat:i => MONTH_FULL[tl[i].m - 1] + ' ' + tl[i].y, sel:selIdx >= 0 ? selIdx : null, f:i => 'ym:' + tl[i].y + '-' + tl[i].m }) +
       legend([['Crushed', C.v], ['Hauled', C.b], ['Stockpile at month end', C.a]]) + '</div>';
 
