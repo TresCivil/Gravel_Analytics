@@ -704,6 +704,16 @@ tr.sel-row td{background:var(--violet-tint);}
   .fhint{color:var(--muted);font-size:12px;margin:0 0 14px;}
   .fnote{font-size:11.5px;color:var(--muted);background:var(--line-soft);border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:8px;}
   tr.is-sel td{background:var(--violet-tint);}
+  /* needs attention: clickable boxes + details */
+  .issue-cell{position:relative;}
+  .issue-cell.att-click{cursor:pointer;transition:box-shadow .12s;}
+  .issue-cell.att-click:hover{box-shadow:0 0 0 2px rgba(194,69,69,.25);}
+  .issue-cell.att-on{box-shadow:0 0 0 2px var(--red);background:#fff;}
+  .att-caret{position:absolute;top:10px;right:10px;font-style:normal;font-size:9px;color:var(--muted);}
+  .att-detail{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;}
+  .att-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .att-x{cursor:pointer;font-size:20px;line-height:1;color:var(--muted);padding:2px 6px;border-radius:6px;}
+  .att-x:hover{background:var(--line-soft);color:var(--ink);}
   .g2.one{grid-template-columns:1fr;}
   html::-webkit-scrollbar{width:10px;}
   html::-webkit-scrollbar-thumb{background:#CBD1E3;border-radius:6px;border:2px solid transparent;background-clip:padding-box;}
@@ -830,15 +840,19 @@ var G = (function () {
 
     S.recent = (P.recent || []).map(r => ({ d:isoOf(r.d), pit:str(r.p), road:str(r.r), t:num(r.t) || 0 })).filter(r => r.d).sort((a, b) => D(b.d) - D(a.d));
 
+    /* tidy material and status text so "150 minus" / "150 Minus" or "In Progress" / "In progress" match */
+    const matLabels = {};
+    const normMat = v => { const t = str(v).replace(/\s+/g, ' '); if (!t) return ''; const k = t.toLowerCase(); const known = MATS.find(m => m.toLowerCase() === k); return matLabels[k] || (matLabels[k] = known || t); };
+    const normStatus = v => { const k = str(v).toLowerCase().replace(/[\s_-]+/g, ''); return ({ confirmed:'Confirmed', open:'In progress', inprogress:'In progress', active:'In progress', completed:'Completed', complete:'Completed', closed:'Completed', cancelled:'Cancelled', canceled:'Cancelled' })[k] || str(v); };
     S.bookings = Array.isArray(P.bookings) ? P.bookings.map(b => ({
-      id:str(b.id), pit:str(b.p), mat:str(b.mat), t:num(b.t) || 0, del:num(b.del) || 0, req:isoOf(b.req), on:isoOf(b.on) || isoOf(b.req), status:str(b.status), road:str(b.r), by:str(b.by)
+      id:str(b.id), pit:str(b.p), mat:normMat(b.mat), t:num(b.t) || 0, del:num(b.del) || 0, req:isoOf(b.req), on:isoOf(b.on) || isoOf(b.req), status:normStatus(b.status), road:str(b.r), by:str(b.by)
     })) : null;
     S.overRule = P.overRule || (S.demo ? 'stock' : 'hauled');
     S.bstock = Array.isArray(P.bstock) ? P.bstock.map(x => ({ pit:str(x.p), mat:str(x.mat), t:num(x.t) || 0 })) : null;
 
     S.owners = Array.isArray(P.owners) ? P.owners.map(o => ({
       name:str(o.name), type:str(o.type), deed:str(o.deed),
-      issues:Array.isArray(o.issues) ? o.issues.filter(Boolean).map(String) : (num(o.issues) ? new Array(num(o.issues)).fill('Open issue') : (o.issues ? [String(o.issues)] : []))
+      issues:(Array.isArray(o.issues) ? o.issues : (o.issues == null ? [] : String(o.issues).split(/\s*;\s*/))).map(x => str(x)).filter(x => x && !/^(none|nil|n\/?a|no|-|0|no issues?)$/i.test(x))
     })) : null;
     S.licences = Array.isArray(P.licences) ? P.licences.map(l => ({ pit:str(l.p), name:str(l.name), end:isoOf(l.end), renew:str(l.renew) })).filter(l => l.end) : null;
     S.period = str(P.royaltyPeriod);
@@ -1077,7 +1091,12 @@ var G = (function () {
       }
       tip.style.opacity = 1; place(e);
     });
-    document.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+    const hideTip = () => { tip.style.opacity = 0; if (cur) { cur.classList.remove('hot'); cur = null; } };
+    document.addEventListener('mouseleave', hideTip);
+    document.addEventListener('mouseout', e => { if (!e.relatedTarget) hideTip(); });
+    window.addEventListener('blur', hideTip);
+    window.addEventListener('scroll', hideTip, true);
+    document.addEventListener('click', hideTip, true);
   }
 
   function showWaiting() {
@@ -1173,6 +1192,57 @@ var G = (function () {
       '<span class="fclear" data-f="clear:all">Clear all</span></div>';
   }
 
+
+  /* ---------- Needs attention: clickable boxes with a details table ---------- */
+  let ATT = null;
+  const daysTo = iso => D(iso) - D(S.TODAY);
+  function attData(R, allRows) {
+    const O = S.owners, priv = O ? O.filter(o => o.type === 'Private') : [];
+    const pitsOf = name => R.filter(p => p.owner === name).map(p => p.name).join(', ');
+    const ytdOf = id => prodY(S.CUR, id);
+    const over = R.filter(p => p.limit && ytdOf(p.id) > p.limit).sort((a, b) => (ytdOf(b.id) - b.limit) - (ytdOf(a.id) - a.limit));
+    const nonc = R.filter(p => p.status !== 'Not started' && p.comp === 'Non-compliant');
+    const iss = O ? O.filter(o => o.issues.length) : null;
+    const deeds = O && priv.length ? priv.filter(o => o.deed === 'Awaiting signing') : null;
+    const lic = S.licences ? S.licences.filter(l => daysTo(l.end) <= EXPIRY_DAYS).sort((a, b) => D(a.end) - D(b.end)) : null;
+    const late = S.royalty ? allRows.filter(r => r.late).sort((a, b) => D(a.dueDate || S.TODAY) - D(b.dueDate || S.TODAY)) : null;
+    const T = (head, rows) => ({ head:head, rows:rows });
+    return {
+      over:{ n:over.length, label:'pits over their limit', title:'Pits over their extraction limit, ' + S.CUR,
+             table:T(['Pit', 'Owner', 'Limit (t)', 'Crushed ' + S.CUR + ' (t)', 'Over by (t)', 'Used'], over.map(p => [esc(p.name) + ' · ' + esc(p.id), esc(p.owner), fmtN(p.limit), fmtN(ytdOf(p.id)), '<b style="color:' + C.r + ';">+' + fmtN(ytdOf(p.id) - p.limit) + '</b>', pctOf(ytdOf(p.id), p.limit) + '%'])) },
+      issues:iss == null ? null : { n:iss.length, label:'owners with open issues', title:'Owners with open issues',
+             table:T(['Owner', 'Issue', 'Pits'], iss.map(o => [esc(o.name), esc(o.issues.join('; ')), esc(pitsOf(o.name))])) },
+      nonc:{ n:nonc.length, label:'non-compliant lots', title:'Pits with a non-compliant lot',
+             table:T(['Pit', 'Owner', 'Status', 'Last production'], nonc.map(p => [esc(p.name) + ' · ' + esc(p.id), esc(p.owner), esc(p.status), p.last ? G.fmt(p.last) : '-'])) },
+      deeds:deeds == null ? null : { n:deeds.length, shown:deeds.length + ' of ' + priv.length, label:'deeds awaiting signing', title:'Deeds of Variation awaiting signing',
+             table:T(['Owner', 'Pits', 'Royalty held'], deeds.map(o => { const held = sum(allRows.filter(r => r.owner === o.name && r.held).map(r => Math.max(0, r.bal))); return [esc(o.name), esc(pitsOf(o.name)), held ? money(held) : '-']; })) },
+      lic:lic == null ? null : { n:lic.length, label:'licences ending within ' + EXPIRY_DAYS + ' days', title:'Licences ending within ' + EXPIRY_DAYS + ' days',
+             table:T(['Pit', 'Licence end', 'Days'], lic.map(l => { const n = daysTo(l.end); return [esc(l.name || pitOf(l.pit).name), G.fmt(l.end), n < 0 ? '<b style="color:' + C.r + ';">Ended ' + (-n) + ' days ago</b>' : n + ' days left']; })) },
+      roy:late == null ? null : { n:late.length, label:'royalties overdue', title:'Royalties overdue',
+             table:T(['Pit', 'Owner', 'Due date', 'Days overdue', 'Due', 'Paid', 'Balance'], late.map(r => [esc(r.pit.name), esc(r.owner), r.dueDate ? G.fmt(r.dueDate) : '-', r.dueDate ? '<b style="color:' + C.r + ';">' + (-daysTo(r.dueDate)) + '</b>' : '-', r.due == null ? '-' : money(r.due), money(r.paid), money(Math.max(0, r.bal))])) }
+    };
+  }
+  function needsAttention(R, allRows, AL) {
+    const A = attData(R, allRows), order = ['over', 'issues', 'nonc', 'deeds', 'lic', 'roy'];
+    const labels = { over:'pits over their limit', issues:'owners with open issues', nonc:'non-compliant lots', deeds:'deeds awaiting signing', lic:'licences ending within ' + EXPIRY_DAYS + ' days', roy:'royalties overdue' };
+    if (ATT && (!A[ATT] || !A[ATT].n)) ATT = null;
+    const cell = k => {
+      const a = A[k];
+      if (!a) return '<div class="issue-cell"><b>–</b><span>' + labels[k] + '</span></div>';
+      const on = ATT === k, can = a.n > 0;
+      return '<div class="issue-cell' + (a.n > 0 ? ' bad' : '') + (can ? ' att-click' : '') + (on ? ' att-on' : '') + '"' + (can ? ' data-att="' + k + '" title="' + (on ? 'Hide details' : 'Show details') + '"' : '') + '><b>' + (a.shown || a.n) + '</b><span>' + a.label + '</span>' + (can ? '<em class="att-caret">' + (on ? '&#9650;' : '&#9660;') + '</em>' : '') + '</div>';
+    };
+    let det = '';
+    if (ATT) {
+      const a = A[ATT];
+      det = '<div class="att-detail"><div class="att-head"><div class="panel-title" style="font-size:14px;">' + a.title + ' <span class="cell-muted" style="font-weight:400;">· ' + a.table.rows.length + '</span></div><span class="att-x" data-att="' + ATT + '" title="Close">&times;</span></div>' +
+        '<div class="table-scroll scrollbox"><table><thead><tr>' + a.table.head.map(x => '<th>' + x + '</th>').join('') + '</tr></thead><tbody>' +
+        a.table.rows.map(r => '<tr>' + r.map((c, i) => '<td' + (i === 0 ? ' class="cell-strong"' : '') + '>' + (c === '' ? '<span class="cell-muted">-</span>' : c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></div>';
+    }
+    return '<div class="panel" style="margin-bottom:16px;border:1px solid #F0D3D3;"><div class="panel-head"><div><div class="panel-title">Needs attention now <span class="attention-badge">' + AL.length + '</span></div><div class="panel-sub">Live position across pits, owners, bookings and licences. Not filtered. Click a box for details.</div></div></div><div class="issue-grid six">' +
+      order.map(cell).join('') + '</div>' + det + '</div>';
+  }
+
   /* keep inner scroll positions when the page redraws after a click */
   function render() {
     const root = $('an-root'); if (!root) return;
@@ -1215,19 +1285,8 @@ var G = (function () {
         : S.royalty ? kpi('Royalties overdue', String(rows.filter(r => r.late).length), '', (paid > 0 ? money(paid) + ' paid to date · ' : '') + rows.filter(r => r.dueDate).length + ' pits with a due date', rows.some(r => r.late) ? 'warn' : '', 'dollar', 'g')
         : kpi('Royalty due', '–', '', 'No royalty data sent', '', 'dollar', 'g')) + '</div>';
 
-    /* needs attention: live, never filtered */
-    const compC = { 'Compliant':0, 'Not yet tested':0, 'Non-compliant':0 };
-    R.filter(p => p.status !== 'Not started').forEach(p => { compC[p.comp] = (compC[p.comp] || 0) + 1; });
-    const lic = (S.licences || []).filter(l => D(l.end) - D(S.TODAY) <= EXPIRY_DAYS).length, overN = R.filter(p => p.limit && prodY(S.CUR, p.id) > p.limit).length;
-    const cell = (n, lab, bad) => '<div class="issue-cell' + (bad ? ' bad' : '') + '"><b>' + n + '</b><span>' + lab + '</span></div>';
-    const O = S.owners, priv = O ? O.filter(o => o.type === 'Private') : [];
-    h += '<div class="panel" style="margin-bottom:16px;border:1px solid #F0D3D3;"><div class="panel-head"><div><div class="panel-title">Needs attention now <span class="attention-badge">' + AL.length + '</span></div><div class="panel-sub">Live position across pits, owners, bookings and licences. Not filtered.</div></div></div><div class="issue-grid six">' +
-      cell(overN, 'pits over their limit', overN > 0) +
-      (O ? cell(O.filter(o => o.issues.length).length, 'owners with open issues', O.some(o => o.issues.length)) : cell('–', 'owners with open issues', false)) +
-      cell(compC['Non-compliant'], 'non-compliant lots', compC['Non-compliant'] > 0) +
-      (O && priv.length ? cell(priv.filter(o => o.deed === 'Awaiting signing').length + ' of ' + priv.length, 'deeds awaiting signing', priv.some(o => o.deed === 'Awaiting signing')) : cell('–', 'deeds awaiting signing', false)) +
-      (S.licences ? cell(lic, 'licences ending within ' + EXPIRY_DAYS + ' days', lic > 0) : cell('–', 'licences ending within ' + EXPIRY_DAYS + ' days', false)) +
-      (S.royalty ? cell(allRows.filter(r => r.late).length, 'royalties overdue', allRows.some(r => r.late)) : cell('–', 'royalties overdue', false)) + '</div></div>';
+    /* needs attention: live, never filtered. Each box opens a details table below it */
+    h += needsAttention(R, allRows, AL);
 
     /* production by month (click a month) and cumulative by year */
     if (more) h += '<div class="v9-note" style="margin:0 0 14px;border-top:none;padding-top:0;">Charts show the latest 4 of the ' + ysAll.length + ' selected years. The KPIs and the Year on year table use all ' + ysAll.length + '.</div>';
@@ -1280,14 +1339,19 @@ var G = (function () {
       const bks = F.pit ? B.BOOKINGS.filter(b => b.pit === F.pit) : B.BOOKINGS, st = s => bks.filter(b => b.status === s), openB = bks.filter(isOpen);
       const booked = sum(bks.filter(b => b.status !== 'Cancelled').map(b => b.t)), deliv = sum(bks.filter(b => b.status !== 'Cancelled').map(b => b.del));
       const byMat = m => sum(bks.filter(b => b.mat === m && b.status !== 'Cancelled').map(b => b.t));
-      const mats = MATS.concat(Array.from(new Set(bks.map(b => b.mat))).filter(m => m && MATS.indexOf(m) < 0));
+      /* only materials that appear in the bookings, known ones first */
+      const present = Array.from(new Set(B.BOOKINGS.map(b => b.mat).filter(Boolean)));
+      const mats = MATS.filter(m => present.indexOf(m) >= 0).concat(present.filter(m => MATS.indexOf(m) < 0));
+      const known = ['In progress', 'Confirmed', 'Completed', 'Cancelled'], odd = {};
+      B.BOOKINGS.forEach(b => { if (known.indexOf(b.status) < 0) odd[b.status || '(blank)'] = (odd[b.status || '(blank)'] || 0) + 1; });
+      const oddNote = Object.keys(odd).length ? '<div class="fnote">Status not recognised: ' + Object.keys(odd).map(k => esc(k) + ' (' + odd[k] + ')').join(', ') + '. Expected In progress, Confirmed or Cancelled (check the Status column sends text, not a number).</div>' : '';
       const overAll = Object.keys(B.PITS).map(id => ({ id:id, t:pitTotals(id) })).filter(x => x.t.over > 0).sort((a, b) => b.t.over - a.t.over);
       const overSel = F.pit ? overAll.filter(x => x.id === F.pit) : overAll;
       h += '<div class="g2">' + pRoads +
         '<div class="panel"><div class="panel-head"><div><div class="panel-title">Bookings' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Live position. Not filtered by year or month.</div></div></div>' +
-        '<div class="mini-row"><div><b>' + openB.length + '</b><span>open</span></div><div><b>' + st('Completed').length + '</b><span>completed</span></div><div><b>' + st('Cancelled').length + '</b><span>cancelled</span></div><div><b style="color:' + (overSel.length ? C.r : 'var(--ink)') + ';">' + fmtN(sum(overSel.map(x => x.t.over))) + ' t</b><span>over-allocated</span></div></div>' +
+        '<div class="mini-row"><div><b>' + st('In progress').length + '</b><span>in progress</span></div><div><b>' + st('Confirmed').length + '</b><span>confirmed</span></div><div><b>' + st('Cancelled').length + '</b><span>cancelled</span></div><div><b style="color:' + (overSel.length ? C.r : 'var(--ink)') + ';">' + fmtN(sum(overSel.map(x => x.t.over))) + ' t</b><span>over-allocated</span></div></div>' + oddNote +
         '<div class="sub-head">Booked and delivered</div>' + fbar('Delivered of booked', deliv, booked, C.g, fmtN(deliv) + ' of ' + fmtN(booked) + ' t') +
-        mats.filter(m => byMat(m) > 0 || MATS.indexOf(m) >= 0).map((m, i) => fbar(m, byMat(m), booked, i === 0 ? C.v : C.b, fmtN(byMat(m)) + ' t')).join('') +
+        mats.map((m, i) => fbar(m, byMat(m), booked, i === 0 ? C.v : C.b, fmtN(byMat(m)) + ' t')).join('') +
         (overAll.length ? '<div class="sub-head">Over-allocated by pit</div>' + overAll.map(x => fbar(pitOf(x.id).name, x.t.over, overAll[0].t.over, C.r, fmtN(x.t.over) + ' t', pitOf(x.id).name + '|' + fmtN(x.t.over) + ' t ' + G.overLabel(), 'pit:' + x.id, pitState(x.id))).join('') : '<div class="v9-sub" style="padding-top:8px;">Every open booking is covered.</div>') + '</div></div>';
     } else {
       h += '<div class="g2 one">' + pRoads + '</div>';
@@ -1327,6 +1391,8 @@ var G = (function () {
     render();
   }
   document.addEventListener('click', e => {
+    const at = e.target.closest ? e.target.closest('[data-att]') : null;
+    if (at) { const k = at.getAttribute('data-att'); ATT = ATT === k ? null : k; render(); return; }
     const el = e.target.closest ? e.target.closest('[data-f]') : null;
     if (!el) return;
     applyF(el.getAttribute('data-f'));
