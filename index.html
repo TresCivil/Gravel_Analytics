@@ -685,6 +685,9 @@ tr.sel-row td{background:var(--violet-tint);}
   html{overflow-x:hidden;}
   body{background:transparent;}
   .main{max-width:none;padding:20px 24px 40px;}
+  .main.embed{padding:12px 16px 32px;position:relative;}
+  .demo-flag{position:absolute;top:0;right:16px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#B26F12;background:#FBF0DD;padding:3px 8px;border-radius:0 0 6px 6px;}
+  .demo-flag[hidden]{display:none;}
   .g2.one{grid-template-columns:1fr;}
   html::-webkit-scrollbar{width:10px;}
   html::-webkit-scrollbar-thumb{background:#CBD1E3;border-radius:6px;border:2px solid transparent;background-clip:padding-box;}
@@ -706,15 +709,8 @@ tr.sel-row td{background:var(--violet-tint);}
 
 </head>
 <body>
-<div class="main">
-  <div class="topbar">
-    <div><h1>Analytics</h1><div class="subtitle" id="an-sub"></div></div>
-    <div class="topbar-actions">
-      <div class="pill-btn" id="an-lfl" onclick="AN.toggleLfl()" title="Compare the same months in every year">Like for like</div>
-      <div class="pill-btn" onclick="window.print()">Export</div>
-    </div>
-  </div>
-  <div class="filter-bar"><div class="yr-dd" id="an-yrdd" onclick="event.stopPropagation()"></div></div>
+<div class="main embed">
+  <div class="demo-flag" id="demo-flag" hidden>Demo data</div>
   <div id="an-root"></div>
 </div>
 
@@ -747,7 +743,9 @@ window.DEMO = {"today":"2026-08-26","pits":[{"id":"389","name":"Rodney Ball Pit"
      owners:[{ name:"Hugh S Stanhope", type:"Private" | "Council" | "Unknown",
                deed:"Signed" | "Awaiting signing" | "Not required", issues:["Access track dispute."] }],
      licences:[{ p:"75", name:"Dareen Pit", end:"2026-10-15", renew:"Yes" }],
-     valuePerT:20, theme:"light"
+     valuePerT:20,
+     years:[2025, 2026] | 2026 | "all",                     // Analytics: which calendar years to show (default: current year)
+     lfl:true                                               // Analytics: like for like, same months in every year
    }
    No hash → the sample data from the original file is shown with a "Demo data" badge.
    ========================================================================== */
@@ -786,6 +784,7 @@ var G = (function () {
     let P = readHash();
     if (P && P.__error) return { error:'The data sent from Power Apps could not be read. Check the JSON in the Src formula.' };
     S.demo = !P; P = P || demo;
+    S.view = { years:P.years, lfl:P.lfl === true || String(P.lfl).toLowerCase() === 'true' };
 
     const now = new Date();
     S.TODAY = isoOf(P.today) || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'));
@@ -1045,7 +1044,7 @@ var G = (function () {
     document.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
   }
 
-  function showError(msg) { document.body.innerHTML = '<div class="main"><div class="panel" style="border:1px solid #F0D3D3;"><div class="panel-title">Could not load the data</div><div class="panel-sub" style="margin-top:6px;">' + esc(msg) + '</div></div></div>'; }
+  function showError(msg) { const root = document.getElementById('an-root') || document.getElementById('dash-root'); const f = document.getElementById('demo-flag'); if (f) f.hidden = true; if (!root) return; root.innerHTML = '<div><div class="panel" style="border:1px solid #F0D3D3;"><div class="panel-title">Could not load the data</div><div class="panel-sub" style="margin-top:6px;">' + esc(msg) + '</div></div></div>'; }
 
   return { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmt, fmtN, money, esc, load, regPits, pitOf, prodM, haulM, prodY, haulY, ytd, monthsAvail, stockAt, stockAtP,
            loadsOf, loadsWhere, limitAll, activeRows, pctOf, elapsedPct, delta, isOpen, bal, cover, pitTotals, hasBookings, bkd, capCol, capGauge,
@@ -1059,21 +1058,10 @@ var G = (function () {
   const { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmtN, money, esc, regPits, pitOf, prodM, haulM, prodY, monthsAvail, stockAtP,
           loadsWhere, limitAll, pctOf, delta, isOpen, pitTotals, bkd, colChart, lineChart, legend, hbar, kpi, illus, alerts } = G;
   const PAL = ['#D9CDEE', '#B9A5DA', '#8168B4', '#54397F'];
-  let YSEL = null, LFL = false, DDOPEN = false;
+  let YSEL = null, LFL = false;
   const YCOL = {};
 
-  function yrsLabel(a) {
-    if (a.length === S.YEARS.length && a.length > 1) return 'All years (' + a.length + ')';
-    if (a.length === 1) return String(a[0]);
-    return a.every((y, i) => i === 0 || y === a[i - 1] + 1) ? a[0] + ' to ' + a[a.length - 1] + ' (' + a.length + ' years)' : a.length + ' years';
-  }
   const ysel = () => YSEL.slice().sort((a, b) => a - b);
-  function renderYearsDD() {
-    const el = $('an-yrdd'); if (!el) return;
-    const all = YSEL.length === S.YEARS.length;
-    el.innerHTML = '<button class="pill-btn' + (DDOPEN ? ' active' : '') + '" onclick="AN.toggleDD()">Years: <b>' + yrsLabel(ysel()) + '</b> <span style="font-size:10px;">&#9662;</span></button>' +
-      (DDOPEN ? '<div class="yr-menu"><label class="yr-opt all"><input type="checkbox"' + (all ? ' checked' : '') + ' onchange="AN.allYrs(this.checked)"/> All years</label>' + S.YEARS.slice().reverse().map(y => '<label class="yr-opt"><input type="checkbox"' + (YSEL.indexOf(y) >= 0 ? ' checked' : '') + ' onchange="AN.toggleYr(' + y + ')"/> ' + y + (y === S.CUR ? ' (to date)' : '') + '</label>').join('') + '</div>' : '');
-  }
   const cutM = () => (LFL ? monthsAvail(Math.max.apply(null, YSEL)) : 12);
   const prodSel = y => sum(prodM(y).slice(0, cutM()));
   const haulSel = y => sum(haulM(y).slice(0, cutM()));
@@ -1091,12 +1079,9 @@ var G = (function () {
 
   function render() {
     const root = $('an-root'); if (!root) return;
-    if (!YSEL || !YSEL.every(y => S.YEARS.indexOf(y) >= 0)) YSEL = [S.CUR];
     const ysAll = ysel(), ys = ysAll.slice(-4), more = ysAll.length > 4, last = ysAll[ysAll.length - 1], single = ysAll.length === 1, cut = cutM();
     Object.keys(YCOL).forEach(k => { delete YCOL[k]; }); ys.forEach((y, i) => { YCOL[y] = PAL[PAL.length - ys.length + i]; });
-    renderYearsDD();
-    $('an-lfl').className = 'pill-btn' + (LFL ? ' active' : '');
-    $('an-sub').innerHTML = 'Production, haulage, bookings and issues by calendar year · ' + yrsLabel(ysAll) + (LFL ? ' · like for like, January to ' + MONTH_FULL[cut - 1] : '') + (S.demo ? ' <span class="illus">Demo data</span>' : '');
+    $('demo-flag').hidden = !S.demo;
 
     const R = regPits(), limAll = limitAll(), B = bkd(), rows = S.royalty || [], AL = alerts();
     const prodBy = ysAll.map(prodSel), haulBy = ysAll.map(haulSel), prod = sum(prodBy), haul = sum(haulBy);
@@ -1198,15 +1183,15 @@ var G = (function () {
   function boot() {
     const r = G.load(window.DEMO);
     if (r.error) { G.showError(r.error); return; }
+    /* years and like for like come from the Power Apps controls, via the payload */
+    const v = S.view || {};
+    let ys = String(v.years).toLowerCase() === 'all' ? S.YEARS.slice()
+      : (Array.isArray(v.years) ? v.years : (v.years != null && v.years !== '' ? String(v.years).split(/[,;\s]+/) : [])).map(Number);
+    ys = Array.from(new Set(ys.filter(y => S.YEARS.indexOf(y) >= 0)));
+    YSEL = ys.length ? ys : [S.CUR];
+    LFL = !!v.lfl;
     render();
   }
-  window.AN = {
-    toggleDD:() => { DDOPEN = !DDOPEN; renderYearsDD(); },
-    toggleYr:y => { const i = YSEL.indexOf(y); if (i >= 0) { if (YSEL.length > 1) YSEL.splice(i, 1); } else YSEL.push(y); render(); },
-    allYrs:on => { YSEL = on ? S.YEARS.slice() : [S.CUR]; render(); },
-    toggleLfl:() => { LFL = !LFL; render(); }
-  };
-  document.addEventListener('click', () => { if (DDOPEN) { DDOPEN = false; renderYearsDD(); } });
   window.addEventListener('hashchange', boot);
   G.initTips();
   boot();
