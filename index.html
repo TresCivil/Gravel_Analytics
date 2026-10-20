@@ -690,6 +690,20 @@ tr.sel-row td{background:var(--violet-tint);}
   .demo-flag[hidden]{display:none;}
   .hbar-row{grid-template-columns:150px 1fr auto !important;}
   .hbar-val{min-width:72px;white-space:nowrap;}
+  /* cross-filtering */
+  [data-f]{cursor:pointer;}
+  .hbar-row[data-f]:hover .hbar-track{box-shadow:0 0 0 2px rgba(107,78,158,.18);}
+  .hbar-row.is-dim{opacity:.35;}
+  .hbar-row.is-sel .hbar-label{color:var(--violet);font-weight:700;}
+  .hbar-row.is-sel .hbar-track{box-shadow:0 0 0 2px var(--violet);}
+  .fbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px;font-size:12.5px;color:var(--ink-soft);}
+  .fchip{display:inline-flex;align-items:center;gap:6px;background:var(--violet-tint);color:var(--violet-dark);border:1px solid var(--violet-tint-2);border-radius:999px;padding:4px 6px 4px 12px;font-weight:600;cursor:pointer;}
+  .fchip i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#fff;color:var(--violet);font-size:13px;line-height:1;}
+  .fchip:hover i{background:var(--violet);color:#fff;}
+  .fclear{color:var(--violet);font-weight:600;cursor:pointer;margin-left:4px;}
+  .fhint{color:var(--muted);font-size:12px;margin:0 0 14px;}
+  .fnote{font-size:11.5px;color:var(--muted);background:var(--line-soft);border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:8px;}
+  tr.is-sel td{background:var(--violet-tint);}
   .g2.one{grid-template-columns:1fr;}
   html::-webkit-scrollbar{width:10px;}
   html::-webkit-scrollbar-thumb{background:#CBD1E3;border-radius:6px;border:2px solid transparent;background-clip:padding-box;}
@@ -717,8 +731,7 @@ tr.sel-row td{background:var(--violet-tint);}
 </div>
 
 <script>
-/* Sample data from gravel_ops_app_v12 — shown only when no data is sent in the URL hash */
-window.DEMO = {"today":"2026-08-26","pits":[{"id":"389","name":"Rodney Ball Pit","loc":"Monto","status":"Under production","comp":"Compliant","owner":"Kenneth Ball","limit":5000,"stockEst":5363.7,"last":"2026-08-25","stock":1142},{"id":"433","name":"Salisbury Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"Russ Salisbury","limit":5000,"stockEst":10550.7,"last":"2026-08-02","stock":1350},{"id":"175","name":"Hampson Pit","loc":"Monto","status":"Under production","comp":"Non-compliant","owner":"Hugh S Stanhope","limit":5000,"stockEst":5000,"last":"2026-08-21","stock":900},{"id":"160","name":"Harm's Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"Martin Harm","limit":5000,"stockEst":5606.9,"last":"2026-08-10","stock":780},{"id":"326","name":"Knights Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"Geoffrey Knight","limit":5000,"stockEst":5340.9,"last":"2026-08-08","stock":1100},{"id":"181","name":"Goschnicks Pit","loc":"Monto","status":"Under production","comp":"Compliant","owner":"Michael Downs","limit":5000,"stockEst":4769,"last":"2026-08-19","stock":482},{"id":"255","name":"McLaughlan's Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"Luke & Susan McLaughlan","limit":5000,"stockEst":4938.1,"last":"2026-08-05","stock":640},{"id":"182","name":"Pailthorpe Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"Barbara Pailthorpe","limit":5000,"stockEst":4672.1,"last":"2026-07-29","stock":560},{"id":"203","name":"Camboon","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"NBRC","limit":5000,"stockEst":3931.1,"last":"2026-07-27","stock":380},{"id":"176","name":"Zwislers Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"James Parker","limit":5000,"stockEst":3667,"last":"2026-08-15","stock":417},{"id":"122","name":"McGuigan / Kooyong Pit","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"George & Pamela MacLennan","limit":5000,"stockEst":3532.1,"last":"2026-07-22","stock":420},{"id":"239","name":"Bonnie Doone","loc":"Monto","status":"Under production","comp":"Not yet tested","owner":"Grant & Carly Burnham","limit":5000,"stockEst":1837.3,"last":"2026-08-15","stock":680},{"id":"347","name":"Baywulla Pit","loc":"Monto","status":"Completed","comp":"Not yet tested","owner":"NBRC","limit":2000,"stockEst":186.2,"last":"2026-07-03","stock":44},{"id":"327","name":"Yarrol Rd Roadside","loc":"Monto","status":"Not started","comp":"Not yet tested","owner":"NBRC","limit":2000,"stockEst":0},{"id":"50","name":"Ellbank Pit","loc":"Eidsvold","status":"Under production","comp":"Not yet tested","owner":"Lance & Janelle Burnham","limit":5000,"stockEst":3756.3,"last":"2026-08-14","stock":430},{"id":"194","name":"Ball Pit","loc":"Monto","status":"Not started","comp":"Compliant","owner":"Graham Ball","limit":5000},{"id":"75","name":"Dareen Pit","loc":"Monto","status":"Not started","comp":"Not yet tested","owner":"Paul & Ingrid Hatton","limit":5000,"stock":0},{"id":"179","name":"Hockey Pit","loc":"Monto","status":"Not started","comp":"Not yet tested","owner":"Karen Hockey","limit":5000},{"id":"189","name":"Foleys Gully Pit","loc":"Monto","status":"Not started","comp":"Not yet tested","owner":"NBRC","limit":5000},{"id":"2","name":"Daisys","loc":"Biggenden","status":"Not started","comp":"Not yet tested","owner":"NBRC","limit":100000},{"id":"49","name":"Glencoe 1 - Forestry Pit","loc":"Eidsvold","status":"Not started","comp":"Not yet tested","owner":"DAFF","limit":5000},{"id":"195","name":"Salisbury Gravel Reserve","loc":"Monto","status":"Not started","comp":"Not yet tested","owner":"DAFF","limit":5000},{"id":"258","name":"Box Flat Pit","loc":"Mount Perry","status":"Not started","comp":"Not yet tested","owner":"TMR","limit":5000},{"id":"411","name":"Albrands Pit","loc":"Mundubbera","status":"Not started","comp":"Not yet tested","owner":"\u2014"},{"id":"277","name":"Kerles Pit","loc":"Mundubbera","status":"Not started","comp":"Not yet tested","owner":"\u2014","limit":5000},{"id":"133","name":"Draytons","loc":"Gayndah","status":"Not started","comp":"Not yet tested","owner":"\u2014","limit":5000}],"crush":[{"p":"50","m":"2026-01","t":61},{"p":"50","m":"2026-02","t":65},{"p":"50","m":"2026-03","t":73},{"p":"50","m":"2026-04","t":98},{"p":"50","m":"2026-05","t":159},{"p":"50","m":"2026-06","t":130},{"p":"50","m":"2026-07","t":167},{"p":"50","m":"2026-08","t":150},{"p":"50","m":"2025-07","t":25},{"p":"50","m":"2025-08","t":45},{"p":"50","m":"2025-09","t":60},{"p":"50","m":"2025-10","t":76},{"p":"50","m":"2025-11","t":83},{"p":"50","m":"2025-12","t":98},{"p":"75","m":"2026-01","t":87},{"p":"75","m":"2026-02","t":127},{"p":"75","m":"2026-03","t":134},{"p":"75","m":"2026-04","t":181},{"p":"75","m":"2026-05","t":251},{"p":"75","m":"2026-06","t":237},{"p":"75","m":"2026-07","t":241},{"p":"75","m":"2026-08","t":215},{"p":"75","m":"2025-07","t":38},{"p":"75","m":"2025-08","t":41},{"p":"75","m":"2025-09","t":74},{"p":"75","m":"2025-10","t":85},{"p":"75","m":"2025-11","t":81},{"p":"75","m":"2025-12","t":92},{"p":"75","m":"2024-07","t":15},{"p":"75","m":"2024-08","t":23},{"p":"75","m":"2024-09","t":35},{"p":"75","m":"2024-10","t":43},{"p":"75","m":"2024-11","t":49},{"p":"75","m":"2024-12","t":56},{"p":"122","m":"2026-01","t":219},{"p":"122","m":"2026-02","t":235},{"p":"122","m":"2026-03","t":294},{"p":"122","m":"2026-04","t":466},{"p":"122","m":"2026-05","t":445},{"p":"122","m":"2026-06","t":529},{"p":"122","m":"2026-07","t":462},{"p":"122","m":"2025-07","t":42},{"p":"122","m":"2025-08","t":56},{"p":"122","m":"2025-09","t":74},{"p":"122","m":"2025-10","t":96},{"p":"122","m":"2025-11","t":136},{"p":"122","m":"2025-12","t":116},{"p":"122","m":"2024-07","t":23},{"p":"122","m":"2024-08","t":28},{"p":"122","m":"2024-09","t":41},{"p":"122","m":"2024-10","t":51},{"p":"122","m":"2024-11","t":70},{"p":"122","m":"2024-12","t":67},{"p":"160","m":"2026-01","t":198},{"p":"160","m":"2026-02","t":249},{"p":"160","m":"2026-03","t":281},{"p":"160","m":"2026-04","t":507},{"p":"160","m":"2026-05","t":509},{"p":"160","m":"2026-06","t":521},{"p":"160","m":"2026-07","t":666},{"p":"160","m":"2026-08","t":469},{"p":"160","m":"2025-07","t":53},{"p":"160","m":"2025-08","t":80},{"p":"160","m":"2025-09","t":111},{"p":"160","m":"2025-10","t":171},{"p":"160","m":"2025-11","t":179},{"p":"160","m":"2025-12","t":186},{"p":"160","m":"2024-07","t":35},{"p":"160","m":"2024-08","t":54},{"p":"160","m":"2024-09","t":58},{"p":"160","m":"2024-10","t":86},{"p":"160","m":"2024-11","t":86},{"p":"160","m":"2024-12","t":101},{"p":"175","m":"2026-01","t":244},{"p":"175","m":"2026-02","t":383},{"p":"175","m":"2026-03","t":415},{"p":"175","m":"2026-04","t":657},{"p":"175","m":"2026-05","t":666},{"p":"175","m":"2026-06","t":867},{"p":"175","m":"2026-07","t":946},{"p":"175","m":"2026-08","t":692},{"p":"175","m":"2025-07","t":95},{"p":"175","m":"2025-08","t":129},{"p":"175","m":"2025-09","t":183},{"p":"175","m":"2025-10","t":191},{"p":"175","m":"2025-11","t":220},{"p":"175","m":"2025-12","t":254},{"p":"175","m":"2024-07","t":41},{"p":"175","m":"2024-08","t":59},{"p":"175","m":"2024-09","t":95},{"p":"175","m":"2024-10","t":136},{"p":"175","m":"2024-11","t":111},{"p":"175","m":"2024-12","t":136},{"p":"176","m":"2026-01","t":48},{"p":"176","m":"2026-02","t":46},{"p":"176","m":"2026-03","t":60},{"p":"176","m":"2026-04","t":97},{"p":"176","m":"2026-05","t":106},{"p":"176","m":"2026-06","t":138},{"p":"176","m":"2026-07","t":135},{"p":"176","m":"2026-08","t":110},{"p":"176","m":"2025-07","t":28},{"p":"176","m":"2025-08","t":39},{"p":"176","m":"2025-09","t":50},{"p":"176","m":"2025-10","t":60},{"p":"176","m":"2025-11","t":70},{"p":"176","m":"2025-12","t":70},{"p":"181","m":"2026-01","t":56},{"p":"181","m":"2026-02","t":82},{"p":"181","m":"2026-03","t":75},{"p":"181","m":"2026-04","t":127},{"p":"181","m":"2026-05","t":153},{"p":"181","m":"2026-06","t":192},{"p":"181","m":"2026-07","t":189},{"p":"181","m":"2026-08","t":149},{"p":"181","m":"2025-07","t":34},{"p":"181","m":"2025-08","t":60},{"p":"181","m":"2025-09","t":64},{"p":"181","m":"2025-10","t":81},{"p":"181","m":"2025-11","t":115},{"p":"181","m":"2025-12","t":85},{"p":"182","m":"2026-01","t":242},{"p":"182","m":"2026-02","t":374},{"p":"182","m":"2026-03","t":428},{"p":"182","m":"2026-04","t":557},{"p":"182","m":"2026-05","t":703},{"p":"182","m":"2026-06","t":738},{"p":"182","m":"2026-07","t":678},{"p":"182","m":"2025-07","t":61},{"p":"182","m":"2025-08","t":85},{"p":"182","m":"2025-09","t":104},{"p":"182","m":"2025-10","t":136},{"p":"182","m":"2025-11","t":152},{"p":"182","m":"2025-12","t":177},{"p":"182","m":"2024-07","t":30},{"p":"182","m":"2024-08","t":51},{"p":"182","m":"2024-09","t":69},{"p":"182","m":"2024-10","t":78},{"p":"182","m":"2024-11","t":72},{"p":"182","m":"2024-12","t":85},{"p":"203","m":"2026-01","t":256},{"p":"203","m":"2026-02","t":227},{"p":"203","m":"2026-03","t":289},{"p":"203","m":"2026-04","t":547},{"p":"203","m":"2026-05","t":660},{"p":"203","m":"2026-06","t":545},{"p":"203","m":"2026-07","t":626},{"p":"203","m":"2025-07","t":28},{"p":"203","m":"2025-08","t":51},{"p":"203","m":"2025-09","t":61},{"p":"203","m":"2025-10","t":74},{"p":"203","m":"2025-11","t":81},{"p":"203","m":"2025-12","t":95},{"p":"203","m":"2024-07","t":17},{"p":"203","m":"2024-08","t":26},{"p":"203","m":"2024-09","t":34},{"p":"203","m":"2024-10","t":41},{"p":"203","m":"2024-11","t":41},{"p":"203","m":"2024-12","t":51},{"p":"239","m":"2026-01","t":77},{"p":"239","m":"2026-02","t":91},{"p":"239","m":"2026-03","t":131},{"p":"239","m":"2026-04","t":176},{"p":"239","m":"2026-05","t":193},{"p":"239","m":"2026-06","t":182},{"p":"239","m":"2026-07","t":213},{"p":"239","m":"2026-08","t":197},{"p":"239","m":"2025-07","t":49},{"p":"239","m":"2025-08","t":73},{"p":"239","m":"2025-09","t":81},{"p":"239","m":"2025-10","t":102},{"p":"239","m":"2025-11","t":113},{"p":"239","m":"2025-12","t":122},{"p":"255","m":"2026-01","t":300},{"p":"255","m":"2026-02","t":317},{"p":"255","m":"2026-03","t":555},{"p":"255","m":"2026-04","t":744},{"p":"255","m":"2026-05","t":721},{"p":"255","m":"2026-06","t":723},{"p":"255","m":"2026-07","t":717},{"p":"255","m":"2026-08","t":883},{"p":"255","m":"2025-07","t":70},{"p":"255","m":"2025-08","t":117},{"p":"255","m":"2025-09","t":147},{"p":"255","m":"2025-10","t":169},{"p":"255","m":"2025-11","t":199},{"p":"255","m":"2025-12","t":273},{"p":"255","m":"2024-07","t":41},{"p":"255","m":"2024-08","t":65},{"p":"255","m":"2024-09","t":90},{"p":"255","m":"2024-10","t":112},{"p":"255","m":"2024-11","t":113},{"p":"255","m":"2024-12","t":104},{"p":"326","m":"2026-01","t":225},{"p":"326","m":"2026-02","t":281},{"p":"326","m":"2026-03","t":439},{"p":"326","m":"2026-04","t":492},{"p":"326","m":"2026-05","t":639},{"p":"326","m":"2026-06","t":820},{"p":"326","m":"2026-07","t":780},{"p":"326","m":"2026-08","t":674},{"p":"326","m":"2025-07","t":36},{"p":"326","m":"2025-08","t":55},{"p":"326","m":"2025-09","t":101},{"p":"326","m":"2025-10","t":120},{"p":"326","m":"2025-11","t":134},{"p":"326","m":"2025-12","t":139},{"p":"326","m":"2024-07","t":27},{"p":"326","m":"2024-08","t":37},{"p":"326","m":"2024-09","t":45},{"p":"326","m":"2024-10","t":80},{"p":"326","m":"2024-11","t":66},{"p":"326","m":"2024-12","t":60},{"p":"347","m":"2026-01","t":123},{"p":"347","m":"2026-02","t":139},{"p":"347","m":"2026-03","t":242},{"p":"347","m":"2026-04","t":298},{"p":"347","m":"2026-05","t":411},{"p":"347","m":"2026-06","t":341},{"p":"347","m":"2026-07","t":406},{"p":"389","m":"2026-01","t":118},{"p":"389","m":"2026-02","t":147},{"p":"389","m":"2026-03","t":217},{"p":"389","m":"2026-04","t":306},{"p":"389","m":"2026-05","t":331},{"p":"389","m":"2026-06","t":313},{"p":"389","m":"2026-07","t":361},{"p":"389","m":"2026-08","t":296},{"p":"389","m":"2025-07","t":51},{"p":"389","m":"2025-08","t":68},{"p":"389","m":"2025-09","t":102},{"p":"389","m":"2025-10","t":105},{"p":"389","m":"2025-11","t":137},{"p":"389","m":"2025-12","t":119},{"p":"389","m":"2024-07","t":24},{"p":"389","m":"2024-08","t":39},{"p":"389","m":"2024-09","t":53},{"p":"389","m":"2024-10","t":59},{"p":"389","m":"2024-11","t":67},{"p":"389","m":"2024-12","t":71},{"p":"433","m":"2026-01","t":319},{"p":"433","m":"2026-02","t":394},{"p":"433","m":"2026-03","t":424},{"p":"433","m":"2026-04","t":721},{"p":"433","m":"2026-05","t":716},{"p":"433","m":"2026-06","t":933},{"p":"433","m":"2026-07","t":1028},{"p":"433","m":"2026-08","t":645},{"p":"433","m":"2025-07","t":145},{"p":"433","m":"2025-08","t":162},{"p":"433","m":"2025-09","t":228},{"p":"433","m":"2025-10","t":321},{"p":"433","m":"2025-11","t":362},{"p":"433","m":"2025-12","t":277},{"p":"433","m":"2024-07","t":59},{"p":"433","m":"2024-08","t":84},{"p":"433","m":"2024-09","t":140},{"p":"433","m":"2024-10","t":168},{"p":"433","m":"2024-11","t":160},{"p":"433","m":"2024-12","t":194}],"haul":[{"p":"50","m":"2025-08","t":34},{"p":"50","m":"2025-09","t":38},{"p":"50","m":"2025-10","t":71},{"p":"50","m":"2025-11","t":64},{"p":"50","m":"2025-12","t":64},{"p":"50","m":"2026-01","t":39},{"p":"50","m":"2026-02","t":37},{"p":"50","m":"2026-03","t":44},{"p":"50","m":"2026-04","t":78},{"p":"50","m":"2026-05","t":90},{"p":"50","m":"2026-06","t":117},{"p":"50","m":"2026-07","t":88},{"p":"50","m":"2026-08","t":96},{"p":"75","m":"2024-08","t":22},{"p":"75","m":"2024-09","t":27},{"p":"75","m":"2024-10","t":41},{"p":"75","m":"2024-11","t":30},{"p":"75","m":"2024-12","t":35},{"p":"75","m":"2025-08","t":42},{"p":"75","m":"2025-09","t":49},{"p":"75","m":"2025-10","t":77},{"p":"75","m":"2025-11","t":56},{"p":"75","m":"2025-12","t":64},{"p":"75","m":"2026-01","t":93},{"p":"75","m":"2026-02","t":127},{"p":"75","m":"2026-03","t":157},{"p":"75","m":"2026-04","t":179},{"p":"75","m":"2026-05","t":305},{"p":"75","m":"2026-06","t":265},{"p":"75","m":"2026-07","t":267},{"p":"75","m":"2026-08","t":269},{"p":"122","m":"2024-08","t":21},{"p":"122","m":"2024-09","t":37},{"p":"122","m":"2024-10","t":51},{"p":"122","m":"2024-11","t":44},{"p":"122","m":"2024-12","t":43},{"p":"122","m":"2025-08","t":39},{"p":"122","m":"2025-09","t":68},{"p":"122","m":"2025-10","t":94},{"p":"122","m":"2025-11","t":82},{"p":"122","m":"2025-12","t":81},{"p":"122","m":"2026-01","t":146},{"p":"122","m":"2026-02","t":155},{"p":"122","m":"2026-03","t":241},{"p":"122","m":"2026-04","t":356},{"p":"122","m":"2026-05","t":362},{"p":"122","m":"2026-06","t":353},{"p":"122","m":"2026-07","t":481},{"p":"122","m":"2026-08","t":376},{"p":"160","m":"2024-08","t":43},{"p":"160","m":"2024-09","t":55},{"p":"160","m":"2024-10","t":58},{"p":"160","m":"2024-11","t":64},{"p":"160","m":"2024-12","t":74},{"p":"160","m":"2025-08","t":79},{"p":"160","m":"2025-09","t":103},{"p":"160","m":"2025-10","t":109},{"p":"160","m":"2025-11","t":118},{"p":"160","m":"2025-12","t":137},{"p":"160","m":"2026-01","t":141},{"p":"160","m":"2026-02","t":221},{"p":"160","m":"2026-03","t":283},{"p":"160","m":"2026-04","t":411},{"p":"160","m":"2026-05","t":484},{"p":"160","m":"2026-06","t":540},{"p":"160","m":"2026-07","t":399},{"p":"160","m":"2026-08","t":501},{"p":"175","m":"2024-08","t":42},{"p":"175","m":"2024-09","t":83},{"p":"175","m":"2024-10","t":89},{"p":"175","m":"2024-11","t":77},{"p":"175","m":"2024-12","t":114},{"p":"175","m":"2025-08","t":78},{"p":"175","m":"2025-09","t":154},{"p":"175","m":"2025-10","t":164},{"p":"175","m":"2025-11","t":143},{"p":"175","m":"2025-12","t":211},{"p":"175","m":"2026-01","t":278},{"p":"175","m":"2026-02","t":264},{"p":"175","m":"2026-03","t":348},{"p":"175","m":"2026-04","t":684},{"p":"175","m":"2026-05","t":694},{"p":"175","m":"2026-06","t":738},{"p":"175","m":"2026-07","t":887},{"p":"175","m":"2026-08","t":572},{"p":"176","m":"2025-08","t":27},{"p":"176","m":"2025-09","t":42},{"p":"176","m":"2025-10","t":60},{"p":"176","m":"2025-11","t":49},{"p":"176","m":"2025-12","t":44},{"p":"176","m":"2026-01","t":21},{"p":"176","m":"2026-02","t":30},{"p":"176","m":"2026-03","t":32},{"p":"176","m":"2026-04","t":48},{"p":"176","m":"2026-05","t":76},{"p":"176","m":"2026-06","t":81},{"p":"176","m":"2026-07","t":63},{"p":"176","m":"2026-08","t":67},{"p":"181","m":"2025-08","t":40},{"p":"181","m":"2025-09","t":50},{"p":"181","m":"2025-10","t":68},{"p":"181","m":"2025-11","t":66},{"p":"181","m":"2025-12","t":83},{"p":"181","m":"2026-01","t":37},{"p":"181","m":"2026-02","t":52},{"p":"181","m":"2026-03","t":61},{"p":"181","m":"2026-04","t":96},{"p":"181","m":"2026-05","t":83},{"p":"181","m":"2026-06","t":121},{"p":"181","m":"2026-07","t":119},{"p":"181","m":"2026-08","t":104},{"p":"182","m":"2024-08","t":30},{"p":"182","m":"2024-09","t":50},{"p":"182","m":"2024-10","t":62},{"p":"182","m":"2024-11","t":55},{"p":"182","m":"2024-12","t":73},{"p":"182","m":"2025-08","t":56},{"p":"182","m":"2025-09","t":92},{"p":"182","m":"2025-10","t":115},{"p":"182","m":"2025-11","t":102},{"p":"182","m":"2025-12","t":135},{"p":"182","m":"2026-01","t":238},{"p":"182","m":"2026-02","t":252},{"p":"182","m":"2026-03","t":330},{"p":"182","m":"2026-04","t":423},{"p":"182","m":"2026-05","t":586},{"p":"182","m":"2026-06","t":501},{"p":"182","m":"2026-07","t":669},{"p":"182","m":"2026-08","t":491},{"p":"203","m":"2024-08","t":19},{"p":"203","m":"2024-09","t":22},{"p":"203","m":"2024-10","t":38},{"p":"203","m":"2024-11","t":36},{"p":"203","m":"2024-12","t":32},{"p":"203","m":"2025-08","t":36},{"p":"203","m":"2025-09","t":40},{"p":"203","m":"2025-10","t":70},{"p":"203","m":"2025-11","t":67},{"p":"203","m":"2025-12","t":60},{"p":"203","m":"2026-01","t":207},{"p":"203","m":"2026-02","t":197},{"p":"203","m":"2026-03","t":265},{"p":"203","m":"2026-04","t":398},{"p":"203","m":"2026-05","t":393},{"p":"203","m":"2026-06","t":418},{"p":"203","m":"2026-07","t":548},{"p":"203","m":"2026-08","t":524},{"p":"239","m":"2025-08","t":51},{"p":"239","m":"2025-09","t":73},{"p":"239","m":"2025-10","t":85},{"p":"239","m":"2025-11","t":89},{"p":"239","m":"2025-12","t":80},{"p":"239","m":"2026-01","t":36},{"p":"239","m":"2026-02","t":53},{"p":"239","m":"2026-03","t":51},{"p":"239","m":"2026-04","t":106},{"p":"239","m":"2026-05","t":129},{"p":"239","m":"2026-06","t":112},{"p":"239","m":"2026-07","t":135},{"p":"239","m":"2026-08","t":120},{"p":"255","m":"2024-08","t":39},{"p":"255","m":"2024-09","t":65},{"p":"255","m":"2024-10","t":77},{"p":"255","m":"2024-11","t":85},{"p":"255","m":"2024-12","t":102},{"p":"255","m":"2025-08","t":72},{"p":"255","m":"2025-09","t":121},{"p":"255","m":"2025-10","t":144},{"p":"255","m":"2025-11","t":157},{"p":"255","m":"2025-12","t":189},{"p":"255","m":"2026-01","t":310},{"p":"255","m":"2026-02","t":292},{"p":"255","m":"2026-03","t":509},{"p":"255","m":"2026-04","t":592},{"p":"255","m":"2026-05","t":714},{"p":"255","m":"2026-06","t":932},{"p":"255","m":"2026-07","t":828},{"p":"255","m":"2026-08","t":592},{"p":"326","m":"2024-08","t":24},{"p":"326","m":"2024-09","t":44},{"p":"326","m":"2024-10","t":48},{"p":"326","m":"2024-11","t":44},{"p":"326","m":"2024-12","t":61},{"p":"326","m":"2025-08","t":45},{"p":"326","m":"2025-09","t":81},{"p":"326","m":"2025-10","t":89},{"p":"326","m":"2025-11","t":82},{"p":"326","m":"2025-12","t":113},{"p":"326","m":"2026-01","t":182},{"p":"326","m":"2026-02","t":224},{"p":"326","m":"2026-03","t":293},{"p":"326","m":"2026-04","t":545},{"p":"326","m":"2026-05","t":675},{"p":"326","m":"2026-06","t":620},{"p":"326","m":"2026-07","t":505},{"p":"326","m":"2026-08","t":475},{"p":"347","m":"2026-01","t":93},{"p":"347","m":"2026-02","t":119},{"p":"347","m":"2026-03","t":198},{"p":"347","m":"2026-04","t":257},{"p":"347","m":"2026-05","t":333},{"p":"347","m":"2026-06","t":307},{"p":"347","m":"2026-07","t":303},{"p":"347","m":"2026-08","t":306},{"p":"389","m":"2024-08","t":30},{"p":"389","m":"2024-09","t":36},{"p":"389","m":"2024-10","t":54},{"p":"389","m":"2024-11","t":39},{"p":"389","m":"2024-12","t":60},{"p":"389","m":"2025-08","t":55},{"p":"389","m":"2025-09","t":68},{"p":"389","m":"2025-10","t":100},{"p":"389","m":"2025-11","t":73},{"p":"389","m":"2025-12","t":111},{"p":"389","m":"2026-01","t":69},{"p":"389","m":"2026-02","t":92},{"p":"389","m":"2026-03","t":103},{"p":"389","m":"2026-04","t":137},{"p":"389","m":"2026-05","t":206},{"p":"389","m":"2026-06","t":196},{"p":"389","m":"2026-07","t":208},{"p":"389","m":"2026-08","t":205},{"p":"433","m":"2024-08","t":66},{"p":"433","m":"2024-09","t":87},{"p":"433","m":"2024-10","t":145},{"p":"433","m":"2024-11","t":107},{"p":"433","m":"2024-12","t":159},{"p":"433","m":"2025-08","t":123},{"p":"433","m":"2025-09","t":162},{"p":"433","m":"2025-10","t":269},{"p":"433","m":"2025-11","t":198},{"p":"433","m":"2025-12","t":295},{"p":"433","m":"2026-01","t":243},{"p":"433","m":"2026-02","t":293},{"p":"433","m":"2026-03","t":335},{"p":"433","m":"2026-04","t":676},{"p":"433","m":"2026-05","t":747},{"p":"433","m":"2026-06","t":796},{"p":"433","m":"2026-07","t":826},{"p":"433","m":"2026-08","t":603}],"recent":[{"d":"2026-08-25","p":"389","r":"Walkers Creek Road","t":24.89},{"d":"2026-08-25","p":"389","r":"Walkers Creek Road","t":24.75},{"d":"2026-08-24","p":"181","r":"A Creek Road","t":23.6},{"d":"2026-08-24","p":"239","r":"Cheltenham Road","t":25},{"d":"2026-08-21","p":"175","r":"Back Glenrae Road","t":24.2},{"d":"2026-08-20","p":"50","r":"Apels Road","t":22.8}],"bookings":[{"id":"BK-012","p":"389","mat":"3.5 Roadbase","t":500,"del":478,"req":"2026-08-22","on":"2026-08-10","status":"Completed","r":"Walkers Creek Road"},{"id":"BK-013","p":"50","mat":"3.5 Roadbase","t":400,"del":0,"req":"2026-08-15","on":"2026-08-08","status":"Cancelled","r":"Cheltenham Road"},{"id":"BK-014","p":"389","mat":"3.5 Roadbase","t":900,"del":620,"req":"2026-08-25","on":"2026-08-14","status":"In progress","r":"Walkers Creek Road"},{"id":"BK-015","p":"389","mat":"150 Minus","t":400,"del":0,"req":"2026-09-05","on":"2026-08-19","status":"Confirmed","r":"Apels Road"},{"id":"BK-016","p":"389","mat":"3.5 Roadbase","t":600,"del":0,"req":"2026-09-19","on":"2026-08-21","status":"Confirmed","r":"Cheltenham Road"},{"id":"BK-017","p":"181","mat":"150 Minus","t":700,"del":240,"req":"2026-09-02","on":"2026-08-16","status":"In progress","r":"A Creek Road"},{"id":"BK-018","p":"181","mat":"150 Minus","t":600,"del":0,"req":"2026-09-16","on":"2026-08-22","status":"Confirmed","r":"Back Glenrae Road"},{"id":"BK-019","p":"50","mat":"3.5 Roadbase","t":700,"del":0,"req":"2026-09-10","on":"2026-08-22","status":"Confirmed","r":"Back Glenrae Road"},{"id":"BK-020","p":"239","mat":"3.5 Roadbase","t":500,"del":0,"req":"2026-09-01","on":"2026-08-23","status":"Confirmed","r":"Cheltenham Road"},{"id":"BK-021","p":"175","mat":"3.5 Roadbase","t":300,"del":0,"req":"2026-09-12","on":"2026-08-24","status":"Confirmed","r":"Walkers Creek Road"},{"id":"BK-022","p":"75","mat":"3.5 Roadbase","t":600,"del":0,"req":"2026-09-19","on":"2026-08-25","status":"Confirmed","r":"Apels Road"}],"bstock":[{"p":"50","mat":"3.5 Roadbase","t":430},{"p":"175","mat":"3.5 Roadbase","t":900},{"p":"181","mat":"150 Minus","t":482},{"p":"239","mat":"3.5 Roadbase","t":680},{"p":"389","mat":"3.5 Roadbase","t":700},{"p":"389","mat":"150 Minus","t":442}],"royalty":[{"p":"239","owner":"Grant & Carly Burnham","due":3420,"paid":0,"status":"Pending","dueDate":"2026-09-15","held":true},{"p":"75","owner":"Paul & Ingrid Hatton","due":3999.5,"paid":0,"status":"Pending","dueDate":"2026-08-31","held":false},{"p":"50","owner":"Lance & Janelle Burnham","due":2451,"paid":0,"status":"Pending","dueDate":"2026-09-30","held":true},{"p":"181","owner":"Michael Downs","due":2777.8,"paid":2778,"status":"Paid","dueDate":"2026-07-31","held":false},{"p":"175","owner":"Hugh S Stanhope","due":12388,"paid":0,"status":"Pending","dueDate":"2026-09-30","held":true},{"p":"160","owner":"Martin Harm","due":8740,"paid":0,"status":"Overdue","dueDate":"2026-08-10","held":true},{"p":"326","owner":"Geoffrey Knight","due":9975,"paid":0,"status":"Pending","dueDate":"2026-10-31","held":true},{"p":"122","owner":"George & Pamela MacLennan","due":6555,"paid":0,"status":"Pending","dueDate":"2026-11-30","held":true},{"p":"255","owner":"Luke & Susan McLaughlan","due":12274,"paid":0,"status":"Pending","dueDate":"2026-09-15","held":true},{"p":"182","owner":"Barbara Pailthorpe","due":9158,"paid":0,"status":"Pending","dueDate":"2026-10-15","held":true},{"p":"389","owner":"Kenneth Ball","due":5669.6,"paid":0,"status":"Pending","dueDate":"2026-08-31","held":false},{"p":"433","owner":"Russ Salisbury","due":14212,"paid":0,"status":"Pending","dueDate":"2026-09-30","held":true},{"p":"176","owner":"James Parker","due":2008.3,"paid":0,"status":"Overdue","dueDate":"2026-08-14","held":true}],"royaltyPeriod":"1 Jul 2026 to 30 Jun 2027","owners":[{"name":"Graham Ball","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Grant & Carly Burnham","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Paul & Ingrid Hatton","type":"Private","deed":"Signed","issues":[]},{"name":"Lance & Janelle Burnham","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Michael Downs","type":"Private","deed":"Signed","issues":[]},{"name":"Hugh S Stanhope","type":"Private","deed":"Awaiting signing","issues":["Access track dispute."]},{"name":"Martin Harm","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Karen Hockey","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Geoffrey Knight","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"George & Pamela MacLennan","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Luke & Susan McLaughlan","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Barbara Pailthorpe","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Kenneth Ball","type":"Private","deed":"Signed","issues":[]},{"name":"Russ Salisbury","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"James Parker","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"North Burnett Regional Council","type":"Council","deed":"Not required","issues":[]},{"name":"DAFF","type":"State","deed":"Not required","issues":[]},{"name":"Ken Albrand","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Colin J Ewards","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Dennis & Jamanda Vains","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Terence & Alexis Slack","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Matthew & Genevieve Dent","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Raymond Drayton","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"John & Lynette Kerle","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Owner not recorded","type":"Unknown","deed":"Unknown","issues":["No owner in the asset register for this pit (a source gap, not a matching issue)."]},{"name":"John B Ahern","type":"Private","deed":"Awaiting signing","issues":["Name check: the asset register shows John B Ahern, the pit name says Paul Ahern. The LotPlan matches exactly, so it is likely the same family or property."]},{"name":"Paul & Anthony Ahern","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Andrew & Ruth Vicary","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Harley Berrie","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Margaret Staib","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"DP & PJ Slack","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"Ann & Warren, Cristian & Leanne Baytum, Bryant","type":"Private","deed":"Awaiting signing","issues":[]},{"name":"TMR","type":"State","deed":"Not required","issues":[]}],"licences":[{"p":"75","name":"Dareen Pit","end":"2026-10-15","renew":"Yes"},{"p":"181","name":"Goschnicks Pit","end":"2028-06-30","renew":"No"},{"p":"389","name":"Rodney Ball Pit","end":"2027-03-31","renew":"No"}],"roads":[{"r":"Gravel Resheeting Program","m":"2025-08","t":81},{"r":"Highstone Road","m":"2025-08","t":99},{"r":"Lakeside Station Road","m":"2025-08","t":132},{"r":"Gravel Resheeting Program","m":"2025-09","t":110},{"r":"Highstone Road","m":"2025-09","t":137},{"r":"Lakeside Station Road","m":"2025-09","t":177},{"r":"Gravel Resheeting Program","m":"2025-10","t":167},{"r":"Highstone Road","m":"2025-10","t":172},{"r":"Lakeside Station Road","m":"2025-10","t":256},{"r":"Gravel Resheeting Program","m":"2025-11","t":150},{"r":"Highstone Road","m":"2025-11","t":164},{"r":"Lakeside Station Road","m":"2025-11","t":218},{"r":"Gravel Resheeting Program","m":"2025-12","t":162},{"r":"Highstone Road","m":"2025-12","t":193},{"r":"Lakeside Station Road","m":"2025-12","t":289},{"r":"Walkers Creek Road","m":"2026-01","t":183},{"r":"Back Glenrae Road","m":"2026-01","t":220},{"r":"Kukar Road","m":"2026-01","t":214},{"r":"Walkers Creek Road","m":"2026-02","t":190},{"r":"Back Glenrae Road","m":"2026-02","t":218},{"r":"Kukar Road","m":"2026-02","t":209},{"r":"Walkers Creek Road","m":"2026-03","t":270},{"r":"Back Glenrae Road","m":"2026-03","t":299},{"r":"Kukar Road","m":"2026-03","t":286},{"r":"Walkers Creek Road","m":"2026-04","t":424},{"r":"Back Glenrae Road","m":"2026-04","t":522},{"r":"Kukar Road","m":"2026-04","t":471},{"r":"Walkers Creek Road","m":"2026-05","t":468},{"r":"Back Glenrae Road","m":"2026-05","t":553},{"r":"Kukar Road","m":"2026-05","t":489},{"r":"Walkers Creek Road","m":"2026-06","t":486},{"r":"Back Glenrae Road","m":"2026-06","t":580},{"r":"Kukar Road","m":"2026-06","t":514},{"r":"Walkers Creek Road","m":"2026-07","t":536},{"r":"Back Glenrae Road","m":"2026-07","t":671},{"r":"Kukar Road","m":"2026-07","t":619},{"r":"Walkers Creek Road","m":"2026-08","t":472},{"r":"Back Glenrae Road","m":"2026-08","t":512},{"r":"Kukar Road","m":"2026-08","t":514},{"r":"Ashton Road","m":"2024-08","t":59},{"r":"Blackers Lane","m":"2024-08","t":72},{"r":"Belah Road","m":"2024-08","t":111},{"r":"Ashton Road","m":"2024-09","t":83},{"r":"Blackers Lane","m":"2024-09","t":110},{"r":"Belah Road","m":"2024-09","t":165},{"r":"Ashton Road","m":"2024-10","t":104},{"r":"Blackers Lane","m":"2024-10","t":151},{"r":"Belah Road","m":"2024-10","t":210},{"r":"Ashton Road","m":"2024-11","t":96},{"r":"Blackers Lane","m":"2024-11","t":122},{"r":"Belah Road","m":"2024-11","t":185},{"r":"Ashton Road","m":"2024-12","t":119},{"r":"Blackers Lane","m":"2024-12","t":170},{"r":"Belah Road","m":"2024-12","t":250},{"r":"Alascan Road","m":"2025-08","t":121},{"r":"Jacobi Road","m":"2025-08","t":100},{"r":"Lawgalls Road","m":"2025-08","t":69},{"r":"Alascan Road","m":"2025-09","t":161},{"r":"Jacobi Road","m":"2025-09","t":156},{"r":"Lawgalls Road","m":"2025-09","t":117},{"r":"Alascan Road","m":"2025-10","t":223},{"r":"Jacobi Road","m":"2025-10","t":198},{"r":"Lawgalls Road","m":"2025-10","t":139},{"r":"Alascan Road","m":"2025-11","t":191},{"r":"Jacobi Road","m":"2025-11","t":168},{"r":"Lawgalls Road","m":"2025-11","t":123},{"r":"Alascan Road","m":"2025-12","t":235},{"r":"Jacobi Road","m":"2025-12","t":225},{"r":"Lawgalls Road","m":"2025-12","t":160},{"r":"Apels Road","m":"2026-01","t":95},{"r":"Gospel Hall Road","m":"2026-01","t":67},{"r":"Lakeside Station Road","m":"2026-01","t":57},{"r":"Apels Road","m":"2026-02","t":132},{"r":"Gospel Hall Road","m":"2026-02","t":92},{"r":"Lakeside Station Road","m":"2026-02","t":78},{"r":"Apels Road","m":"2026-03","t":151},{"r":"Gospel Hall Road","m":"2026-03","t":104},{"r":"Lakeside Station Road","m":"2026-03","t":88},{"r":"Apels Road","m":"2026-04","t":200},{"r":"Gospel Hall Road","m":"2026-04","t":140},{"r":"Lakeside Station Road","m":"2026-04","t":130},{"r":"Apels Road","m":"2026-05","t":310},{"r":"Gospel Hall Road","m":"2026-05","t":217},{"r":"Lakeside Station Road","m":"2026-05","t":189},{"r":"Apels Road","m":"2026-06","t":281},{"r":"Gospel Hall Road","m":"2026-06","t":201},{"r":"Lakeside Station Road","m":"2026-06","t":172},{"r":"Apels Road","m":"2026-07","t":291},{"r":"Gospel Hall Road","m":"2026-07","t":200},{"r":"Lakeside Station Road","m":"2026-07","t":182},{"r":"Apels Road","m":"2026-08","t":286},{"r":"Gospel Hall Road","m":"2026-08","t":200},{"r":"Lakeside Station Road","m":"2026-08","t":175},{"r":"Auburn Hills Rd","m":"2024-08","t":11},{"r":"Alascan Road","m":"2024-08","t":55},{"r":"Bellerts Road","m":"2024-08","t":13},{"r":"Auburn Hills Rd","m":"2024-09","t":19},{"r":"Alascan Road","m":"2024-09","t":93},{"r":"Bellerts Road","m":"2024-09","t":18},{"r":"Auburn Hills Rd","m":"2024-10","t":26},{"r":"Alascan Road","m":"2024-10","t":120},{"r":"Bellerts Road","m":"2024-10","t":29},{"r":"Auburn Hills Rd","m":"2024-11","t":22},{"r":"Alascan Road","m":"2024-11","t":108},{"r":"Bellerts Road","m":"2024-11","t":27},{"r":"Auburn Hills Rd","m":"2024-12","t":21},{"r":"Alascan Road","m":"2024-12","t":141},{"r":"Bellerts Road","m":"2024-12","t":25},{"r":"Griffin Road","m":"2025-08","t":88},{"r":"Kukar Road","m":"2025-08","t":87},{"r":"Griffin Road","m":"2025-09","t":154},{"r":"Kukar Road","m":"2025-09","t":129},{"r":"Griffin Road","m":"2025-10","t":186},{"r":"Kukar Road","m":"2025-10","t":174},{"r":"Griffin Road","m":"2025-11","t":180},{"r":"Kukar Road","m":"2025-11","t":152},{"r":"Griffin Road","m":"2025-12","t":217},{"r":"Kukar Road","m":"2025-12","t":186},{"r":"Cheltenham Road","m":"2026-01","t":294},{"r":"Highstone Road","m":"2026-01","t":198},{"r":"Lime Mine Road","m":"2026-01","t":244},{"r":"Cheltenham Road","m":"2026-02","t":322},{"r":"Highstone Road","m":"2026-02","t":218},{"r":"Lime Mine Road","m":"2026-02","t":252},{"r":"Cheltenham Road","m":"2026-03","t":454},{"r":"Highstone Road","m":"2026-03","t":305},{"r":"Lime Mine Road","m":"2026-03","t":387},{"r":"Cheltenham Road","m":"2026-04","t":713},{"r":"Highstone Road","m":"2026-04","t":476},{"r":"Lime Mine Road","m":"2026-04","t":531},{"r":"Cheltenham Road","m":"2026-05","t":786},{"r":"Highstone Road","m":"2026-05","t":517},{"r":"Lime Mine Road","m":"2026-05","t":603},{"r":"Cheltenham Road","m":"2026-06","t":878},{"r":"Highstone Road","m":"2026-06","t":592},{"r":"Lime Mine Road","m":"2026-06","t":732},{"r":"Cheltenham Road","m":"2026-07","t":926},{"r":"Highstone Road","m":"2026-07","t":617},{"r":"Lime Mine Road","m":"2026-07","t":711},{"r":"Cheltenham Road","m":"2026-08","t":688},{"r":"Highstone Road","m":"2026-08","t":464},{"r":"Lime Mine Road","m":"2026-08","t":523},{"r":"Berries Road","m":"2024-08","t":15},{"r":"Berries Road","m":"2024-09","t":18},{"r":"Berries Road","m":"2024-10","t":23},{"r":"Berries Road","m":"2024-11","t":21},{"r":"Berries Road","m":"2024-12","t":27},{"r":"A Creek Road","m":"2026-01","t":174},{"r":"Jump Up Road","m":"2026-01","t":197},{"r":"Gravel Resheeting Program","m":"2026-01","t":190},{"r":"A Creek Road","m":"2026-02","t":228},{"r":"Jump Up Road","m":"2026-02","t":237},{"r":"Gravel Resheeting Program","m":"2026-02","t":232},{"r":"A Creek Road","m":"2026-03","t":295},{"r":"Jump Up Road","m":"2026-03","t":309},{"r":"Gravel Resheeting Program","m":"2026-03","t":302},{"r":"A Creek Road","m":"2026-04","t":454},{"r":"Jump Up Road","m":"2026-04","t":443},{"r":"Gravel Resheeting Program","m":"2026-04","t":482},{"r":"A Creek Road","m":"2026-05","t":561},{"r":"Jump Up Road","m":"2026-05","t":573},{"r":"Gravel Resheeting Program","m":"2026-05","t":611},{"r":"A Creek Road","m":"2026-06","t":556},{"r":"Jump Up Road","m":"2026-06","t":537},{"r":"Gravel Resheeting Program","m":"2026-06","t":568},{"r":"A Creek Road","m":"2026-07","t":484},{"r":"Jump Up Road","m":"2026-07","t":555},{"r":"Gravel Resheeting Program","m":"2026-07","t":534},{"r":"A Creek Road","m":"2026-08","t":491},{"r":"Jump Up Road","m":"2026-08","t":491},{"r":"Gravel Resheeting Program","m":"2026-08","t":485}]};
+window.DEMO = null; /* live data only: everything comes from Power Apps via the URL hash */
 </script>
 <script>
 /* ==========================================================================
@@ -738,7 +751,8 @@ window.DEMO = {"today":"2026-08-26","pits":[{"id":"389","name":"Rodney Ball Pit"
      recent:[{ d:"2026-08-25", p:"389", r:"Walkers Creek Road", t:24.89 }],   // latest deliveries
      bookings:[{ id:"BK-014", p:"389", mat:"3.5 Roadbase", t:900, del:620, req:"2026-08-25", on:"2026-08-14",
                  status:"Confirmed" | "In progress" | "Completed" | "Cancelled", r:"Walkers Creek Road", by:"M. Reid" }],   // req, by optional
-     bstock:[{ p:"389", mat:"3.5 Roadbase", t:700 }],       // stock on hand by material, for booking cover
+     bstock:[{ p:"389", mat:"3.5 Roadbase", t:700 }],       // stock on hand by material (only for overRule:"stock")
+     overRule:"hauled" | "stock",                            // over-allocated = hauled > booked (default) or booked beyond stockpile (demo)
      royalty:[{ p:"239", owner:"Grant & Carly Burnham", due:3420, paid:0,   // due / paid optional: dates alone drive the overdue count
                 status:"Pending" | "Paid" | "Overdue" | "Not required", dueDate:"2026-09-15", held:true }],
      royaltyPeriod:"1 Jul 2026 to 30 Jun 2027",
@@ -749,7 +763,7 @@ window.DEMO = {"today":"2026-08-26","pits":[{"id":"389","name":"Rodney Ball Pit"
      years:[2025, 2026] | 2026 | "all",                     // Analytics: which calendar years to show (default: current year)
      lfl:true                                               // Analytics: like for like, same months in every year
    }
-   No hash → the sample data from the original file is shown with a "Demo data" badge.
+   No hash → the page waits for data from Power Apps (no sample data is built in).
    ========================================================================== */
 var G = (function () {
   'use strict';
@@ -772,7 +786,7 @@ var G = (function () {
   const str = v => (v == null ? '' : String(v).trim());
 
   /* ---------- state ---------- */
-  const S = { royaltyAmounts:false, demo:false, TODAY:'', CUR:0, CURM:1, pits:[], CRUSH:[], HAUL:[], ROADS:[], YEARS:[], PMT:{}, HMT:{}, SMT:{}, recent:[],
+  const S = { overRule:'hauled', royaltyAmounts:false, demo:false, TODAY:'', CUR:0, CURM:1, pits:[], CRUSH:[], HAUL:[], ROADS:[], YEARS:[], PMT:{}, HMT:{}, SMT:{}, recent:[],
               bookings:null, bstock:null, royalty:null, period:'', owners:null, licences:null, valuePerT:20, hasLoads:false };
 
   function readHash() {
@@ -785,6 +799,7 @@ var G = (function () {
   function load(demo) {
     let P = readHash();
     if (P && P.__error) return { error:'The data sent from Power Apps could not be read. Check the JSON in the Src formula.' };
+    if (!P && !demo) return { waiting:true };
     S.demo = !P; P = P || demo;
     S.view = { years:P.years, lfl:P.lfl === true || String(P.lfl).toLowerCase() === 'true' };
 
@@ -802,7 +817,7 @@ var G = (function () {
     S.CRUSH = []; (P.crush || []).forEach(e => { const k = ym(e.m || e.d); const t = num(e.t); if (k && t) S.CRUSH.push({ pit:str(e.p), y:k.y, m:k.m, t:t }); });
     S.HAUL = []; S.ROADS = [];
     (P.haul || []).forEach(e => { const k = ym(e.m || e.d); const t = num(e.t); if (!k || !t) return; S.HAUL.push({ pit:str(e.p), road:e.r != null ? (str(e.r) || 'Not recorded') : null, y:k.y, m:k.m, t:t, n:num(e.n) }); });
-    if (Array.isArray(P.roads)) P.roads.forEach(e => { const k = ym(e.m || e.d); const t = num(e.t); if (k && t) S.ROADS.push({ road:str(e.r) || 'Not recorded', y:k.y, m:k.m, t:t, n:num(e.n) }); });
+    if (Array.isArray(P.roads)) P.roads.forEach(e => { const k = ym(e.m || e.d); const t = num(e.t); if (k && t) S.ROADS.push({ road:str(e.r) || 'Not recorded', pit:e.p != null ? str(e.p) : null, y:k.y, m:k.m, t:t, n:num(e.n) }); });
     else S.ROADS = S.HAUL.filter(e => e.road != null);
     S.hasLoads = S.ROADS.some(e => e.n != null);
 
@@ -818,6 +833,7 @@ var G = (function () {
     S.bookings = Array.isArray(P.bookings) ? P.bookings.map(b => ({
       id:str(b.id), pit:str(b.p), mat:str(b.mat), t:num(b.t) || 0, del:num(b.del) || 0, req:isoOf(b.req), on:isoOf(b.on) || isoOf(b.req), status:str(b.status), road:str(b.r), by:str(b.by)
     })) : null;
+    S.overRule = P.overRule || (S.demo ? 'stock' : 'hauled');
     S.bstock = Array.isArray(P.bstock) ? P.bstock.map(x => ({ pit:str(x.p), mat:str(x.mat), t:num(x.t) || 0 })) : null;
 
     S.owners = Array.isArray(P.owners) ? P.owners.map(o => ({
@@ -873,13 +889,21 @@ var G = (function () {
     list.forEach(b => { const need = Math.max(0, b.t - (b.del || 0)); ahead += need; const used = Math.min(left, need); left -= used; over[b.id] = need - used; });
     return { stock:stock, over:over, booked:ahead };
   }
+  /* over-allocated: hauled more than booked (rule 'hauled'), or booked beyond the pit's stockpile (rule 'stock') */
+  const overHauled = b => (b.status === 'Cancelled' ? 0 : Math.max(0, (b.del || 0) - (b.t || 0)));
   function cover(b) {
+    if (S.overRule === 'hauled') { const o = overHauled(b); return o > 0 ? { kind:'over', o:o } : (isOpen(b) ? { kind:'ok' } : { kind:'none' }); }
     if (!isOpen(b)) return { kind:'none' };
     const o = queue(b.pit, b.mat).over[b.id] || 0;
     if (o <= 0) return { kind:'ok' };
     return { kind:pitOf(b.pit).status === 'Not started' ? 'pending' : 'over', o:o };
   }
   function pitTotals(pit) {
+    if (S.overRule === 'hauled') {
+      const p = pitOf(pit), stock = Math.max(0, p.stock != null ? p.stock : stockAtP(S.CUR, pit)), bs = S.bookings.filter(b => b.pit === pit);
+      const reserved = sum(bs.filter(isOpen).map(bal)), over = sum(bs.map(overHauled));
+      return { stock:stock, reserved:reserved, over:over, free:Math.max(0, stock - reserved) };
+    }
     let stock = 0, reserved = 0, over = 0;
     const mats = S.bstock ? MATS : [MATS[0]];
     mats.forEach(m => {
@@ -938,9 +962,9 @@ var G = (function () {
       series.forEach((sr, j) => {
         const v = sr.vals[i]; if (v == null) return;
         const bh = Math.max(0, v / sc.max * ih), x = cx - k * bw / 2 + j * bw;
-        s += '<rect x="' + x + '" y="' + (T + ih - bh) + '" width="' + Math.max(1, bw - 2) + '" height="' + bh + '" rx="2" fill="' + (sr.ghost ? 'none' : sr.color) + '"' + (sr.ghost ? ' stroke="' + sr.color + '" stroke-width="1.5" stroke-dasharray="3 2"' : '') + '/>';
+        s += '<rect x="' + x + '" y="' + (T + ih - bh) + '" width="' + Math.max(1, bw - 2) + '" height="' + bh + '" rx="2" fill="' + (sr.ghost ? 'none' : sr.color) + '"' + (sr.ghost ? ' stroke="' + sr.color + '" stroke-width="1.5" stroke-dasharray="3 2"' : '') + (o.sel != null && o.sel !== i ? ' opacity="0.3"' : '') + '/>';
       });
-      if (tipRows.length) s += '<rect class="hit" x="' + (L + gw * i) + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent" data-tip="' + esc((o.tipCat ? o.tipCat(i) : c) + '|' + tipRows.join('|')) + '"/>';
+      if (tipRows.length) s += '<rect class="hit" x="' + (L + gw * i) + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent" data-tip="' + esc((o.tipCat ? o.tipCat(i) : c) + '|' + tipRows.join('|') + (o.f ? '|' + (o.sel === i ? 'Click to clear the filter' : 'Click to filter') : '')) + '"' + (o.f ? ' data-f="' + esc(o.f(i)) + '"' : '') + '/>';
     });
     return s + '</svg>';
   }
@@ -958,11 +982,15 @@ var G = (function () {
       s += '<path d="' + d + '" fill="none" stroke="' + sr.color + '" stroke-width="' + (sr.w || 2.2) + '"' + (sr.dash ? ' stroke-dasharray="4 3"' : '') + ' stroke-linejoin="round" stroke-linecap="round"/>';
       sr.vals.forEach((v, i) => { if (v != null && !sr.nodots && !o.nodots) s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="2.6" fill="' + sr.color + '"/>'; });
     });
+    if (o.sel != null && o.sel >= 0 && o.sel < n) {
+      s += '<line x1="' + X(o.sel) + '" x2="' + X(o.sel) + '" y1="' + T + '" y2="' + (T + ih) + '" stroke="' + C.ink + '" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>';
+      series.forEach(sr => { const v = sr.vals[o.sel]; if (v != null) s += '<circle cx="' + X(o.sel).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="5" fill="' + sr.color + '" stroke="#fff" stroke-width="2"/>'; });
+    }
     /* hover: one band per category, the full height of the plot */
     const gw = n > 1 ? iw / (n - 1) : iw;
     cats.forEach((c, i) => {
       const rows = series.filter(sr => sr.vals[i] != null).map(sr => sr.name + ': ' + fmtN(sr.vals[i]) + ' t'); if (!rows.length) return;
-      s += '<rect class="hit" x="' + (X(i) - gw / 2) + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent" data-tip="' + esc((o.tipCat ? o.tipCat(i) : c) + '|' + rows.join('|')) + '"/>';
+      s += '<rect class="hit" x="' + (X(i) - gw / 2) + '" y="' + T + '" width="' + gw + '" height="' + ih + '" fill="transparent" data-tip="' + esc((o.tipCat ? o.tipCat(i) : c) + '|' + rows.join('|') + (o.f ? '|' + (o.sel === i ? 'Click to clear the filter' : 'Click to filter') : '')) + '"' + (o.f ? ' data-f="' + esc(o.f(i)) + '"' : '') + '/>';
     });
     return s + '</svg>';
   }
@@ -990,6 +1018,7 @@ var G = (function () {
   function kpi(label, value, unit, sub, subCls, ic, icCls, extra) {
     return '<div class="kpi-card"><div class="kpi-top"><span class="kpi-label">' + label + '</span><div class="kpi-icon ' + icCls + '">' + icon(ic) + '</div></div><div><span class="kpi-value">' + value + '</span>' + (unit ? '<span class="kpi-unit">' + unit + '</span>' : '') + '</div><div class="kpi-delta ' + (subCls || '') + '">' + sub + '</div>' + (extra || '') + '</div>';
   }
+  const overLabel = () => (S.overRule === 'hauled' ? 'hauled over booking' : 'not yet crushed');
   const illus = t => (S.demo ? ' <span class="illus">' + (t || 'Illustrative') + '</span>' : '');
 
   /* ---------- alerts and issues (one list; counts reused on Analytics) ---------- */
@@ -999,8 +1028,8 @@ var G = (function () {
     const near = R.filter(p => p.limit && ytd(p.id) <= p.limit && ytd(p.id) / p.limit >= 0.95);
     if (near.length) out.push({ sev:'warn', title:near.length + (near.length === 1 ? ' pit is' : ' pits are') + ' within 5% of the extraction limit', meta:near.map(p => p.name + ' ' + Math.round(ytd(p.id) / p.limit * 100) + '%').join(', ') + '.', when:'Now' });
     if (B) {
-      const overs = B.BOOKINGS.filter(b => isOpen(b) && cover(b).kind !== 'ok'), ot = sum(Object.keys(B.PITS).map(id => pitTotals(id).over));
-      if (overs.length) out.push({ sev:'warn', title:overs.length + ' booking' + (overs.length === 1 ? ' is' : 's are') + ' over-allocated', meta:fmtN(ot) + ' t is booked that has not been crushed yet.', when:'Now' });
+      const overs = B.BOOKINGS.filter(b => (S.overRule === 'hauled' || isOpen(b)) && cover(b).kind === 'over' || (isOpen(b) && cover(b).kind === 'pending')), ot = sum(Object.keys(B.PITS).map(id => pitTotals(id).over));
+      if (overs.length) out.push({ sev:'warn', title:overs.length + ' booking' + (overs.length === 1 ? ' is' : 's are') + ' over-allocated', meta:S.overRule === 'hauled' ? fmtN(ot) + ' t hauled beyond the booked tonnes (' + overs.map(b => b.id).slice(0, 4).join(', ') + (overs.length > 4 ? '…' : '') + ').' : fmtN(ot) + ' t is booked that has not been crushed yet.', when:'Now' });
     }
     R.filter(p => p.comp === 'Non-compliant').forEach(p => out.push({ sev:'crit', title:p.name + ' has a non-compliant lot', meta:'Failed testing. Hold the lot and retest before further haulage.', when:'Testing' }));
     if (S.owners) {
@@ -1051,150 +1080,239 @@ var G = (function () {
     document.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
   }
 
+  function showWaiting() {
+    const root = document.getElementById('an-root') || document.getElementById('dash-root'); const f = document.getElementById('demo-flag'); if (f) f.hidden = true; if (!root) return;
+    root.innerHTML = '<div class="panel"><div class="panel-title">Waiting for data from Power Apps</div><div class="panel-sub" style="margin-top:6px;">No data has been sent to this page yet. In Power Apps, check that the control\'s Src ends with # followed by the EncodeUrl(JSON(...)) data.</div></div>';
+  }
   function showError(msg) { const root = document.getElementById('an-root') || document.getElementById('dash-root'); const f = document.getElementById('demo-flag'); if (f) f.hidden = true; if (!root) return; root.innerHTML = '<div><div class="panel" style="border:1px solid #F0D3D3;"><div class="panel-title">Could not load the data</div><div class="panel-sub" style="margin-top:6px;">' + esc(msg) + '</div></div></div>'; }
 
   return { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmt, fmtN, money, esc, load, regPits, pitOf, prodM, haulM, prodY, haulY, ytd, monthsAvail, stockAt, stockAtP,
            loadsOf, loadsWhere, limitAll, activeRows, pctOf, elapsedPct, delta, isOpen, bal, cover, pitTotals, hasBookings, bkd, capCol, capGauge,
-           colChart, lineChart, donut, spark, legend, hbar, pill, compPill, icon, kpi, illus, alerts, alertRow, initTips, showError };
+           colChart, lineChart, donut, spark, legend, hbar, pill, compPill, icon, kpi, illus, overLabel, alerts, alertRow, initTips, showError, showWaiting };
 })();
 
 </script>
 <script>
 (function () {
   'use strict';
-  const { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmtN, money, esc, regPits, pitOf, prodM, haulM, prodY, monthsAvail, stockAtP,
-          loadsWhere, limitAll, pctOf, delta, isOpen, pitTotals, bkd, colChart, lineChart, legend, hbar, kpi, illus, alerts } = G;
+  const { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmtN, money, esc, regPits, pitOf, prodM, haulM, prodY, monthsAvail,
+          limitAll, pctOf, delta, isOpen, pitTotals, bkd, colChart, lineChart, legend, kpi, illus, alerts } = G;
   const PAL = ['#D9CDEE', '#B9A5DA', '#8168B4', '#54397F'];
   let YSEL = null, LFL = false;
   const YCOL = {};
 
+  /* ---------- cross-filter state: click a pit, a month or a road; click again to clear ---------- */
+  const F = { pit:null, road:null, m:null, y:null };
+  const anyF = () => !!(F.pit || F.road || F.m);
+  function applyF(spec) {
+    const [k, v] = spec.split(':');
+    if (k === 'pit') F.pit = F.pit === v ? null : v;
+    else if (k === 'road') F.road = F.road === v ? null : v;
+    else if (k === 'm') { const m = +v; if (F.m === m && F.y == null) { F.m = null; } else { F.m = m; F.y = null; } }
+    else if (k === 'ym') { const [y, m] = v.split('-').map(Number); if (F.m === m && F.y === y) { F.m = null; F.y = null; } else { F.m = m; F.y = y; } }
+    else if (k === 'clear') { if (v === 'pit') F.pit = null; else if (v === 'road') F.road = null; else if (v === 'month') { F.m = null; F.y = null; } else { F.pit = F.road = F.m = F.y = null; } }
+  }
+  const monthLabel = () => (F.m ? MONTH_FULL[F.m - 1] + (F.y ? ' ' + F.y : '') : '');
+  const roadsHavePit = () => S.ROADS.some(e => e.pit);
+
+  /* ---------- filtered data ---------- */
   const ysel = () => YSEL.slice().sort((a, b) => a - b);
   const cutM = () => (LFL ? monthsAvail(Math.max.apply(null, YSEL)) : 12);
-  const prodSel = y => sum(prodM(y).slice(0, cutM()));
-  const haulSel = y => sum(haulM(y).slice(0, cutM()));
+  /* crushed by month for year y: pit filter (roads don't link to crushing) */
+  const pmF = y => prodM(y, F.pit || undefined);
+  /* hauled by month for year y: road filter uses the road summary, pit filter uses the pit summary */
+  const hmF = y => {
+    if (F.road) { const a = new Array(12).fill(0); S.ROADS.forEach(e => { if (e.y === y && e.road === F.road && (!F.pit || !e.pit || e.pit === F.pit)) a[e.m - 1] += e.t; }); return a; }
+    return F.pit ? haulM(y, e => e.pit === F.pit) : haulM(y);
+  };
+  /* total of a monthly array for year y under the month filter (or like-for-like cut) */
+  const inYear = (arr, y) => (F.m ? ((!F.y || F.y === y) ? arr[F.m - 1] : 0) : sum(arr.slice(0, cutM())));
+  /* running stockpile (crushed less hauled, all years) for all pits or one pit */
+  function stockSeries(pit) {
+    const out = {}; let run = 0;
+    S.YEARS.forEach(y => {
+      const p = prodM(y, pit || undefined), h = pit ? haulM(y, e => e.pit === pit) : haulM(y);
+      out[y] = []; for (let m = 0; m < 12; m++) { run += p[m] - h[m]; out[y].push(y === S.CUR && m >= S.CURM ? null : run); }
+    });
+    return out;
+  }
+  /* stock at the end of a given year+month for one pit */
+  const stockAtPM = (pit, y, m) => sum(S.CRUSH.filter(e => e.pit === pit && (e.y < y || (e.y === y && e.m <= m))).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === pit && (e.y < y || (e.y === y && e.m <= m))).map(e => e.t));
+  const loadsF = f => {
+    const base = F.road ? S.ROADS.filter(e => e.road === F.road) : (S.ROADS.length && !F.pit ? S.ROADS : (S.ROADS.length && roadsHavePit() ? S.ROADS.filter(e => e.pit === F.pit) : S.HAUL.filter(e => !F.pit || e.pit === F.pit)));
+    const rows = base.filter(f);
+    return S.hasLoads && base !== S.HAUL ? Math.round(sum(rows.map(e => (e.n != null ? e.n : e.t / 24.6)))) : Math.round(sum(rows.map(e => e.t)) / 24.6);
+  };
+  const inMonthF = e => !F.m || (e.m === F.m && (!F.y || e.y === F.y));
+
   const mLab = (y, m) => MON[m - 1] + ' ' + String(y).slice(2);
-  /* chronological months for the selected years, starting at the first month with activity */
   function timeline(ys) {
     const out = []; ys.forEach(y => { for (let m = 1; m <= monthsAvail(y); m++) out.push({ y:y, m:m }); });
     const first = out.findIndex(p => S.PMT[p.y][p.m - 1] > 0 || S.HMT[p.y][p.m - 1] > 0);
     return first > 0 ? out.slice(first) : out;
   }
-  function stackRow(label, segs, max, total) {
-    return '<div class="hbar-row" data-tip="' + esc(label + '|' + segs.filter(s => s.v > 0).map(s => s.name + ': ' + fmtN(s.v) + ' t').join('|')) + '"><div class="hbar-label" title="' + esc(label) + '">' + esc(label) + '</div><div class="hbar-track hstack">' +
+
+  /* bar row that can be clicked to filter; state: 'sel' | 'dim' | '' */
+  const tipClick = (tip, on) => tip + '|' + (on ? 'Click to clear the filter' : 'Click to filter');
+  function fbar(label, val, max, color, right, tip, f, state) {
+    return '<div class="hbar-row' + (state ? ' is-' + state : '') + '"' + (tip ? ' data-tip="' + esc(f ? tipClick(tip, state === 'sel') : tip) + '"' : '') + (f ? ' data-f="' + esc(f) + '"' : '') + '><div class="hbar-label" title="' + esc(label) + '">' + esc(label) + '</div><div class="hbar-track"><div class="hbar-fill" style="width:' + Math.max(1, Math.min(100, val / (max || 1) * 100)) + '%;background:' + color + ';"></div></div><div class="hbar-val">' + right + '</div></div>';
+  }
+  function stackRow(label, segs, max, total, f, state) {
+    const tip = label + '|' + segs.filter(s => s.v > 0).map(s => s.name + ': ' + fmtN(s.v) + ' t').join('|');
+    return '<div class="hbar-row' + (state ? ' is-' + state : '') + '" data-tip="' + esc(tipClick(tip, state === 'sel')) + '" data-f="' + esc(f) + '"><div class="hbar-label" title="' + esc(label) + '">' + esc(label) + '</div><div class="hbar-track hstack">' +
       segs.map(s => (s.v > 0 ? '<div style="width:' + (s.v / max * 100) + '%;background:' + s.color + ';"></div>' : '')).join('') + '</div><div class="hbar-val"><b>' + fmtN(total) + ' t</b></div></div>';
   }
+  const pitState = id => (F.pit ? (F.pit === id ? 'sel' : 'dim') : '');
+  const roadState = r => (F.road ? (F.road === r ? 'sel' : 'dim') : '');
 
+  function filterBar() {
+    if (!anyF()) return '<div class="fhint">Click a pit, month, chart point or road to filter the page. Click it again to clear.</div>';
+    const chip = (label, kind) => '<span class="fchip" data-f="clear:' + kind + '">' + esc(label) + '<i>&times;</i></span>';
+    return '<div class="fbar">Filtered by ' +
+      (F.pit ? chip(pitOf(F.pit).name, 'pit') : '') + (F.m ? chip(monthLabel(), 'month') : '') + (F.road ? chip(F.road, 'road') : '') +
+      '<span class="fclear" data-f="clear:all">Clear all</span></div>';
+  }
+
+  /* keep inner scroll positions when the page redraws after a click */
   function render() {
     const root = $('an-root'); if (!root) return;
+    const keep = Array.prototype.map.call(root.querySelectorAll('.scrollbox'), el => el.scrollTop);
+    root.innerHTML = build();
+    Array.prototype.forEach.call(root.querySelectorAll('.scrollbox'), (el, i) => { if (keep[i]) el.scrollTop = keep[i]; });
+  }
+
+  function build() {
     const ysAll = ysel(), ys = ysAll.slice(-4), more = ysAll.length > 4, last = ysAll[ysAll.length - 1], single = ysAll.length === 1, cut = cutM();
     Object.keys(YCOL).forEach(k => { delete YCOL[k]; }); ys.forEach((y, i) => { YCOL[y] = PAL[PAL.length - ys.length + i]; });
     $('demo-flag').hidden = !S.demo;
+    if (F.y && ysAll.indexOf(F.y) < 0) { F.m = null; F.y = null; }
 
-    const R = regPits(), limAll = limitAll(), B = bkd(), rows = S.royalty || [], AL = alerts();
+    const R = regPits(), limAll = limitAll(), fp = F.pit ? pitOf(F.pit) : null, lim = fp ? (fp.limit || 0) : limAll;
+    const B = bkd(), allRows = S.royalty || [], rows = F.pit ? allRows.filter(r => r.pit.id === F.pit) : allRows, AL = alerts();
+    const prodSel = y => inYear(pmF(y), y), haulSel = y => inYear(hmF(y), y);
     const prodBy = ysAll.map(prodSel), haulBy = ysAll.map(haulSel), prod = sum(prodBy), haul = sum(haulBy);
     const py = ysAll[0] - 1, hasPy = S.YEARS.indexOf(py) >= 0;
-    const dtxt = (cur, prev) => { if (!single) return ''; if (!hasPy) return 'First year of data'; const d = delta(cur, prev); return d == null ? 'First year of data' : (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '% vs ' + py + (LFL ? ' same months' : (last === S.CUR ? ' full year' : '')); };
+    const dtxt = (cur, prev) => { if (!single) return ''; if (!hasPy) return 'First year of data'; const d = delta(cur, prev); return d == null ? 'No ' + py + ' figure to compare' : (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '% vs ' + (F.m ? MON[F.m - 1] + ' ' : '') + py + (LFL && !F.m ? ' same months' : (last === S.CUR && !F.m ? ' full year' : '')); };
     const byYear = arr => ys.map((y, i) => y + ' ' + fmtN(arr[arr.length - ys.length + i])).join(' · ') + (more ? ' · +' + (ysAll.length - 4) + ' earlier' : '');
-    const tl = timeline(ys), cr = tl.map(p => S.PMT[p.y][p.m - 1]), hl = tl.map(p => S.HMT[p.y][p.m - 1]), sk = tl.map(p => S.SMT[p.y][p.m - 1]);
-    const stockEnd = sk[sk.length - 1] || 0, h3 = hl.slice(-3), avgH = h3.length ? sum(h3) / h3.length : 0, cover = avgH > 0 ? stockEnd / avgH : null;
+    const SS = F.pit ? stockSeries(F.pit) : S.SMT;
+    const tl = timeline(ys), cr = tl.map(p => pmF(p.y)[p.m - 1]), hl = tl.map(p => hmF(p.y)[p.m - 1]), sk = tl.map(p => SS[p.y][p.m - 1]);
+    const selIdx = F.m ? tl.findIndex(p => p.m === F.m && p.y === (F.y || last)) : -1;
+    const stockEnd = selIdx >= 0 ? (sk[selIdx] || 0) : (sk[sk.length - 1] || 0);
+    const stockLab = selIdx >= 0 ? 'at end of ' + MON[F.m - 1] + ' ' + (F.y || last) : (last === S.CUR ? 'today' : 'at 31 Dec ' + last);
+    const hCov = F.road ? tl.map(p => (F.pit ? haulM(p.y, e => e.pit === F.pit) : haulM(p.y))[p.m - 1]) : hl;
+    const upto = selIdx >= 0 ? selIdx + 1 : hl.length, h3 = hCov.slice(Math.max(0, upto - 3), upto), avgH = h3.length ? sum(h3) / h3.length : 0, cover = avgH > 0 ? stockEnd / avgH : null;
     const due = sum(rows.map(r => r.due || 0)), paid = sum(rows.map(r => r.paid));
+    const scope = (F.m ? ' · ' + monthLabel() : '') + (F.road ? ' · ' + F.road : '');
 
-    let h = '<div class="kpi-row six">' +
-      kpi('Crushed', fmtN(prod), 't', single ? dtxt(prod, hasPy ? prodSel(py) : 0) : byYear(prodBy), single && hasPy && prod >= prodSel(py) ? 'up' : '', 'prod', 'v') +
-      kpi('Hauled', fmtN(haul), 't', single ? dtxt(haul, hasPy ? haulSel(py) : 0) : byYear(haulBy), single && hasPy && haul >= haulSel(py) ? 'up' : '', 'truck', 'g') +
-      kpi('Stockpile ' + (last === S.CUR ? 'today' : 'at 31 Dec ' + last), fmtN(stockEnd), 't', cover ? cover.toFixed(1) + ' months of cover at recent haulage' : 'Crushed less hauled, all years', '', 'stack', 'v') +
-      kpi('Annual limit used in calendar year ' + last, limAll ? pctOf(prodY(last), limAll) + '%' : '–', '', limAll ? ys.map(y => y + ' ' + pctOf(prodY(y), limAll) + '%').join(' · ') + ' of ' + fmtN(limAll) + ' t' : 'No pit limits recorded', '', 'gauge', 'a') +
+    let h = filterBar();
+    h += '<div class="kpi-row six">' +
+      kpi('Crushed' + (fp ? ' · ' + esc(fp.name) : ''), fmtN(prod), 't', single ? dtxt(prod, hasPy ? prodSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(prodBy), single && hasPy && prod >= prodSel(py) ? 'up' : '', 'prod', 'v') +
+      kpi('Hauled' + (fp ? ' · ' + esc(fp.name) : '') + (F.road ? ' · ' + esc(F.road) : ''), fmtN(haul), 't', single ? dtxt(haul, hasPy ? haulSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(haulBy), single && hasPy && haul >= haulSel(py) ? 'up' : '', 'truck', 'g') +
+      kpi('Stockpile ' + stockLab, fmtN(stockEnd), 't', cover ? cover.toFixed(1) + ' months of cover at recent haulage' : 'Crushed less hauled, all years', '', 'stack', 'v') +
+      kpi('Annual limit used in calendar year ' + last + (fp ? ' · ' + esc(fp.name) : ''), lim ? pctOf(prodY(last, F.pit || undefined), lim) + '%' : '–', '', lim ? ys.map(y => y + ' ' + pctOf(prodY(y, F.pit || undefined), lim) + '%').join(' · ') + ' of ' + fmtN(lim) + ' t' : (fp ? 'No limit set for this pit' : 'No pit limits recorded'), '', 'gauge', 'a') +
       kpi('Est. value crushed', '$' + Math.round(prod * S.valuePerT / 1000).toLocaleString('en-AU') + 'k', '', 'At about $' + S.valuePerT + ' per tonne' + illus(), '', 'dollar', 'a') +
-      (S.royaltyAmounts ? kpi('Royalty due', money(due), '', money(paid) + ' paid · current period, not filtered by year' + illus(), '', 'dollar', 'g')
-                 : S.royalty ? kpi('Royalties overdue', String(rows.filter(r => r.late).length), '', (paid > 0 ? money(paid) + ' paid to date · ' : '') + rows.filter(r => r.dueDate).length + ' pits with a due date', rows.some(r => r.late) ? 'warn' : '', 'dollar', 'g') : kpi('Royalty due', '–', '', 'No royalty data sent', '', 'dollar', 'g')) + '</div>';
+      (S.royaltyAmounts ? kpi('Royalty due' + (fp ? ' · ' + esc(fp.name) : ''), money(due), '', money(paid) + ' paid · current period, not filtered by year' + illus(), '', 'dollar', 'g')
+        : S.royalty ? kpi('Royalties overdue', String(rows.filter(r => r.late).length), '', (paid > 0 ? money(paid) + ' paid to date · ' : '') + rows.filter(r => r.dueDate).length + ' pits with a due date', rows.some(r => r.late) ? 'warn' : '', 'dollar', 'g')
+        : kpi('Royalty due', '–', '', 'No royalty data sent', '', 'dollar', 'g')) + '</div>';
 
-    /* needs attention, near the top */
+    /* needs attention: live, never filtered */
     const compC = { 'Compliant':0, 'Not yet tested':0, 'Non-compliant':0 };
     R.filter(p => p.status !== 'Not started').forEach(p => { compC[p.comp] = (compC[p.comp] || 0) + 1; });
-    const ytdOf = id => prodY(S.CUR, id);
-    const lic = (S.licences || []).filter(l => D(l.end) - D(S.TODAY) <= EXPIRY_DAYS).length, overN = R.filter(p => p.limit && ytdOf(p.id) > p.limit).length;
+    const lic = (S.licences || []).filter(l => D(l.end) - D(S.TODAY) <= EXPIRY_DAYS).length, overN = R.filter(p => p.limit && prodY(S.CUR, p.id) > p.limit).length;
     const cell = (n, lab, bad) => '<div class="issue-cell' + (bad ? ' bad' : '') + '"><b>' + n + '</b><span>' + lab + '</span></div>';
     const O = S.owners, priv = O ? O.filter(o => o.type === 'Private') : [];
-    h += '<div class="panel" style="margin-bottom:16px;border:1px solid #F0D3D3;"><div class="panel-head"><div><div class="panel-title">Needs attention now <span class="attention-badge">' + AL.length + '</span></div><div class="panel-sub">Live position across pits, owners, bookings and licences. Not filtered by year.</div></div></div><div class="issue-grid six">' +
+    h += '<div class="panel" style="margin-bottom:16px;border:1px solid #F0D3D3;"><div class="panel-head"><div><div class="panel-title">Needs attention now <span class="attention-badge">' + AL.length + '</span></div><div class="panel-sub">Live position across pits, owners, bookings and licences. Not filtered.</div></div></div><div class="issue-grid six">' +
       cell(overN, 'pits over their limit', overN > 0) +
       (O ? cell(O.filter(o => o.issues.length).length, 'owners with open issues', O.some(o => o.issues.length)) : cell('–', 'owners with open issues', false)) +
       cell(compC['Non-compliant'], 'non-compliant lots', compC['Non-compliant'] > 0) +
       (O && priv.length ? cell(priv.filter(o => o.deed === 'Awaiting signing').length + ' of ' + priv.length, 'deeds awaiting signing', priv.some(o => o.deed === 'Awaiting signing')) : cell('–', 'deeds awaiting signing', false)) +
       (S.licences ? cell(lic, 'licences ending within ' + EXPIRY_DAYS + ' days', lic > 0) : cell('–', 'licences ending within ' + EXPIRY_DAYS + ' days', false)) +
-      (S.royalty ? cell(rows.filter(r => r.late).length, 'royalties overdue', rows.some(r => r.late)) : cell('–', 'royalties overdue', false)) + '</div></div>';
+      (S.royalty ? cell(allRows.filter(r => r.late).length, 'royalties overdue', allRows.some(r => r.late)) : cell('–', 'royalties overdue', false)) + '</div></div>';
 
-    /* production by month and cumulative by year */
+    /* production by month (click a month) and cumulative by year */
     if (more) h += '<div class="v9-note" style="margin:0 0 14px;border-top:none;padding-top:0;">Charts show the latest 4 of the ' + ysAll.length + ' selected years. The KPIs and the Year on year table use all ' + ysAll.length + '.</div>';
     const cumOf = (arr, n) => { let c = 0; return arr.map((v, i) => (i < n ? (c += v) : null)); };
-    h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Production by month</div><div class="panel-sub">Tonnes crushed per month' + (single ? ', ' + ys[0] : ', years side by side') + '</div></div></div>' +
-      colChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], vals:prodM(y).map((v, i) => (i < monthsAvail(y) ? v : null)) })), { h:250, tipCat:i => MONTH_FULL[i] }) + legend(ys.map(y => [String(y), YCOL[y]])) + '</div>' +
-      '<div class="panel"><div class="panel-head"><div><div class="panel-title">Cumulative production by year</div><div class="panel-sub">Running total through the year against the limit for all open pits</div></div></div>' +
-      lineChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], w:3, vals:cumOf(prodM(y), monthsAvail(y)) })), { h:250, tipCat:i => 'To the end of ' + MONTH_FULL[i], hline:limAll ? { v:limAll, label:'Limit for all open pits ' + fmtN(limAll) + ' t' } : null }) + legend(ys.map(y => [String(y), YCOL[y]])) +
-      '<div class="v9-note">All ' + R.filter(p => p.limit).length + ' open pits with a limit add up to ' + fmtN(limAll) + ' t a year. Pit limits are assumed to be the same in every year.</div></div></div>';
+    const mSel = F.m ? F.m - 1 : null;
+    h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Production by month' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Tonnes crushed per month' + (single ? ', ' + ys[0] : ', years side by side') + '</div></div></div>' +
+      colChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], vals:pmF(y).map((v, i) => (i < monthsAvail(y) ? v : null)) })), { h:250, tipCat:i => MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1) }) + legend(ys.map(y => [String(y), YCOL[y]])) + '</div>' +
+      '<div class="panel"><div class="panel-head"><div><div class="panel-title">Cumulative production by year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Running total through the year against the limit for ' + (fp ? 'this pit' : 'all open pits') + '</div></div></div>' +
+      lineChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], w:3, vals:cumOf(pmF(y), monthsAvail(y)) })), { h:250, tipCat:i => 'To the end of ' + MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1), hline:lim ? { v:lim, label:(fp ? 'Limit for ' + fp.name + ' ' : 'Limit for all open pits ') + fmtN(lim) + ' t' } : null }) + legend(ys.map(y => [String(y), YCOL[y]])) +
+      '<div class="v9-note">' + (fp ? esc(fp.name) + (fp.limit ? ' has a ' + fmtN(fp.limit) + ' t limit a year.' : ' has no limit set.') : 'All ' + R.filter(p => p.limit).length + ' open pits with a limit add up to ' + fmtN(limAll) + ' t a year.') + ' Pit limits are assumed to be the same in every year.</div></div></div>';
 
-    /* continuous crushed, hauled, stockpile timeline */
-    const trend = sk.length > 3 ? stockEnd - sk[sk.length - 4] : null, many = tl.length > 14;
-    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Crushed, hauled and stockpile</div><div class="panel-sub">One continuous timeline for the selected years. The stockpile is everything crushed less everything hauled, so it carries over from month to month.</div></div></div>' +
-      '<div class="mini-row"><div><b>' + fmtN(stockEnd) + ' t</b><span>stockpile ' + (last === S.CUR ? 'today' : 'at 31 Dec ' + last) + '</span></div><div><b>' + (cover ? cover.toFixed(1) : '-') + '</b><span>months of cover at the last 3 months of haulage</span></div><div><b style="color:' + (trend != null && trend > 0 ? C.a : C.g) + ';">' + (trend == null ? '-' : (trend > 0 ? '+' : '') + fmtN(trend) + ' t') + '</b><span>' + (trend != null && trend > 0 ? 'rising over 3 months: crushing is ahead of haulage' : 'change over 3 months') + '</span></div></div>' +
-      lineChart(tl.map(p => mLab(p.y, p.m)), [{ name:'Crushed', color:C.v, vals:cr }, { name:'Hauled', color:C.b, vals:hl }, { name:'Stockpile at month end', color:C.a, dash:true, vals:sk }], { w:1000, h:270, labelEvery:many ? 3 : 1, nodots:many, tipCat:i => MONTH_FULL[tl[i].m - 1] + ' ' + tl[i].y }) +
+    /* continuous crushed, hauled, stockpile timeline (click a point) */
+    const trend = sk.length > 3 ? (sk[upto - 1] || 0) - (sk[Math.max(0, upto - 4)] || 0) : null, many = tl.length > 14;
+    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Crushed, hauled and stockpile' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One continuous timeline for the selected years. The stockpile is everything crushed less everything hauled, so it carries over from month to month.' + (F.road ? ' Hauled shows ' + esc(F.road) + ' only.' : '') + '</div></div></div>' +
+      '<div class="mini-row"><div><b>' + fmtN(stockEnd) + ' t</b><span>stockpile ' + stockLab + '</span></div><div><b>' + (cover ? cover.toFixed(1) : '-') + '</b><span>months of cover at the last 3 months of haulage</span></div><div><b style="color:' + (trend != null && trend > 0 ? C.a : C.g) + ';">' + (trend == null ? '-' : (trend > 0 ? '+' : '') + fmtN(trend) + ' t') + '</b><span>' + (trend != null && trend > 0 ? 'rising over 3 months: crushing is ahead of haulage' : 'change over 3 months') + '</span></div></div>' +
+      lineChart(tl.map(p => mLab(p.y, p.m)), [{ name:'Crushed', color:C.v, vals:cr }, { name:'Hauled', color:C.b, vals:hl }, { name:'Stockpile at month end', color:C.a, dash:true, vals:sk }], { w:1000, h:270, labelEvery:many ? 3 : 1, nodots:many, tipCat:i => MONTH_FULL[tl[i].m - 1] + ' ' + tl[i].y, sel:selIdx >= 0 ? selIdx : null, f:i => 'ym:' + tl[i].y + '-' + tl[i].m }) +
       legend([['Crushed', C.v], ['Hauled', C.b], ['Stockpile at month end', C.a]]) + '</div>';
 
-    /* where the material sits, crushed by pit */
-    const sitting = R.map(p => ({ p:p, t:stockAtP(last, p.id) })).filter(x => x.t > 0).sort((a, b) => b.t - a.t);
-    const byPit = R.map(p => ({ p:p, segs:ys.map(y => ({ name:String(y), color:YCOL[y], v:prodY(y, p.id) })) })).map(x => { x.total = sum(x.segs.map(s => s.v)); return x; }).filter(x => x.total > 0).sort((a, b) => b.total - a.total);
-    h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Where the material sits</div><div class="panel-sub">Stockpile by pit ' + (last === S.CUR ? 'today' : 'at 31 Dec ' + last) + ': crushed and not yet hauled · ' + sitting.length + ' pits</div></div></div>' +
-      (sitting.length ? '<div class="scrollbox">' + sitting.map(x => hbar(x.p.name, x.t, sitting[0].t, C.a, fmtN(x.t) + ' t')).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No stockpile.</div>') + '</div>' +
-      '<div class="panel"><div class="panel-head"><div><div class="panel-title">Crushed by pit</div><div class="panel-sub">' + byPit.length + ' pits, ' + (more ? 'latest 4 selected years' : 'selected years') + ' stacked</div></div></div>' +
-      (byPit.length ? '<div class="scrollbox">' + byPit.map(x => stackRow(x.p.name, x.segs, byPit[0].total, x.total)).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No crushing in the selected years.</div>') + legend(ys.map(y => [String(y), YCOL[y]])) + '</div></div>';
+    /* where the material sits (stock at the selected month end) and crushed by pit (click a pit) */
+    const sy = F.m ? (F.y || last) : last, sm = F.m ? F.m : (sy === S.CUR ? S.CURM : 12);
+    const sitting = R.map(p => ({ p:p, t:stockAtPM(p.id, sy, sm) })).filter(x => x.t > 0).sort((a, b) => b.t - a.t);
+    const byPit = R.map(p => ({ p:p, segs:ys.map(y => ({ name:String(y), color:YCOL[y], v:inYear(prodM(y, p.id), y) })) })).map(x => { x.total = sum(x.segs.map(s => s.v)); return x; }).filter(x => x.total > 0).sort((a, b) => b.total - a.total);
+    h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Where the material sits</div><div class="panel-sub">Stockpile by pit ' + (F.m ? 'at end of ' + MON[sm - 1] + ' ' + sy : stockLab) + ': crushed and not yet hauled · ' + sitting.length + ' pits</div></div></div>' +
+      (sitting.length ? '<div class="scrollbox">' + sitting.map(x => fbar(x.p.name, x.t, sitting[0].t, C.a, fmtN(x.t) + ' t', x.p.name + '|Stockpile ' + fmtN(x.t) + ' t', 'pit:' + x.p.id, pitState(x.p.id))).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No stockpile.</div>') + '</div>' +
+      '<div class="panel"><div class="panel-head"><div><div class="panel-title">Crushed by pit</div><div class="panel-sub">' + byPit.length + ' pits, ' + (more ? 'latest 4 selected years' : 'selected years') + ' stacked' + (F.m ? ' · ' + monthLabel() + ' only' : '') + '</div></div></div>' +
+      (byPit.length ? '<div class="scrollbox">' + byPit.map(x => stackRow(x.p.name, x.segs, byPit[0].total, x.total, 'pit:' + x.p.id, pitState(x.p.id))).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No crushing in this selection.</div>') + legend(ys.map(y => [String(y), YCOL[y]])) + '</div></div>';
 
-    /* year on year, years as rows */
+    /* year on year, years as rows (follows pit, road and month filters) */
     const yy = S.YEARS.map(a => {
-      const n = Math.min(cut, monthsAvail(a)), p = prodM(a).slice(0, n), hh = haulM(a).slice(0, n), pk = p.indexOf(Math.max.apply(null, p)), pits = new Set(S.CRUSH.filter(e => e.y === a && e.m <= n).map(e => e.pit)).size;
-      return { y:a, prod:sum(p), haul:sum(hh), loads:loadsWhere(e => e.y === a && e.m <= n), pits:pits, avg:pits ? Math.round(sum(p) / pits) : 0, peak:sum(p) ? MON[pk] + ' ' + fmtN(p[pk]) + ' t' : '-', stock:S.SMT[a][n - 1] || 0, share:limAll ? pctOf(sum(p), limAll) + '%' : '–' };
+      const n = Math.min(cut, monthsAvail(a)), pAll = pmF(a), hAll = hmF(a);
+      const idx = F.m ? (F.m <= monthsAvail(a) ? [F.m - 1] : []) : Array.from({ length:n }, (_, i) => i);
+      const p = idx.map(i => pAll[i]), hh = idx.map(i => hAll[i]), pk = p.indexOf(Math.max.apply(null, [0].concat(p)));
+      const pits = new Set(S.CRUSH.filter(e => e.y === a && idx.indexOf(e.m - 1) >= 0 && (!F.pit || e.pit === F.pit)).map(e => e.pit)).size;
+      const endM = F.m ? F.m : n;
+      return { y:a, prod:sum(p), haul:sum(hh), loads:loadsF(e => e.y === a && idx.indexOf(e.m - 1) >= 0), pits:pits, avg:pits ? Math.round(sum(p) / pits) : 0,
+               peak:sum(p) ? MON[idx[pk]] + ' ' + fmtN(p[pk]) + ' t' : '-', stock:(SS[a] && SS[a][endM - 1]) || 0, share:lim ? pctOf(sum(p), lim) + '%' : '–' };
     });
-    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Year on year</div><div class="panel-sub">One row per calendar year' + (LFL ? ', January to ' + MONTH_FULL[cut - 1] + ' of each year' : '') + '. Selected years are highlighted.</div></div></div><div class="table-scroll scrollbox"><table><thead><tr><th>Year</th><th>Crushed (t)</th><th>Hauled (t)</th><th>Loads</th><th>Pits producing</th><th>Average per producing pit (t)</th><th>Peak month</th><th>Stockpile at end (t)</th><th>Share of annual limit</th></tr></thead><tbody>' +
-      yy.map(r => '<tr' + (YSEL.indexOf(r.y) >= 0 ? ' class="sel-row"' : '') + '><td class="cell-strong">' + r.y + (r.y === S.CUR && !LFL ? ' to date' : '') + '</td><td>' + fmtN(r.prod) + '</td><td>' + fmtN(r.haul) + '</td><td>' + fmtN(r.loads) + '</td><td>' + r.pits + '</td><td>' + fmtN(r.avg) + '</td><td>' + r.peak + '</td><td>' + fmtN(r.stock) + '</td><td>' + r.share + '</td></tr>').join('') +
-      '</tbody></table></div><div class="v9-note">' + S.CUR + ' is year to date. Turn on Like for like to compare the same months in every year.</div></div>';
+    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Year on year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One row per calendar year' + (F.m ? ', ' + MONTH_FULL[F.m - 1] + ' only' : (LFL ? ', January to ' + MONTH_FULL[cut - 1] + ' of each year' : '')) + (F.road ? ' · hauled and loads for ' + esc(F.road) : '') + '. Selected years are highlighted.</div></div></div><div class="table-scroll scrollbox"><table><thead><tr><th>Year</th><th>Crushed (t)</th><th>Hauled (t)</th><th>Loads</th><th>Pits producing</th><th>Average per producing pit (t)</th><th>Peak month</th><th>Stockpile at end (t)</th><th>Share of ' + (fp ? 'pit' : 'annual') + ' limit</th></tr></thead><tbody>' +
+      yy.map(r => '<tr' + (YSEL.indexOf(r.y) >= 0 ? ' class="sel-row"' : '') + '><td class="cell-strong">' + r.y + (r.y === S.CUR && !LFL && !F.m ? ' to date' : '') + '</td><td>' + fmtN(r.prod) + '</td><td>' + fmtN(r.haul) + '</td><td>' + fmtN(r.loads) + '</td><td>' + r.pits + '</td><td>' + fmtN(r.avg) + '</td><td>' + r.peak + '</td><td>' + fmtN(r.stock) + '</td><td>' + r.share + '</td></tr>').join('') +
+      '</tbody></table></div><div class="v9-note">' + S.CUR + ' is year to date.</div></div>';
 
-    /* roads and bookings */
-    const rg = {}, rl = {}; S.ROADS.filter(e => ys.indexOf(e.y) >= 0).forEach(e => { rg[e.road] = (rg[e.road] || 0) + e.t; });
-    const roads = Object.keys(rg).map(k => ({ k:k, t:rg[k], n:loadsWhere(e => e.road === k && ys.indexOf(e.y) >= 0) })).sort((a, b) => b.t - a.t), totR = sum(roads.map(r => r.t));
-    const pRoads = '<div class="panel"><div class="panel-head"><div><div class="panel-title">Roads by gravel hauled</div><div class="panel-sub">Selected years combined · ' + roads.length + ' roads · ' + fmtN(totR) + ' t in total</div></div></div>' +
-      (roads.length ? '<div class="scrollbox">' + roads.map((r, i) => hbar((i + 1) + '. ' + r.k, r.t, roads[0].t, C.b, fmtN(r.t) + ' t · ' + fmtN(r.n) + ' loads')).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No haulage in the selected years.</div>') + '</div>';
+    /* roads (click a road) and bookings */
+    const pitBlocked = F.pit && !roadsHavePit();
+    const rg = {}; S.ROADS.filter(e => ys.indexOf(e.y) >= 0 && inMonthF(e) && (!F.pit || pitBlocked || e.pit === F.pit)).forEach(e => { rg[e.road] = (rg[e.road] || 0) + e.t; });
+    const roads = Object.keys(rg).map(k => ({ k:k, t:rg[k], n:(S.hasLoads ? Math.round(sum(S.ROADS.filter(e => e.road === k && ys.indexOf(e.y) >= 0 && inMonthF(e) && (!F.pit || pitBlocked || e.pit === F.pit)).map(e => (e.n != null ? e.n : e.t / 24.6)))) : Math.round(rg[k] / 24.6)) })).sort((a, b) => b.t - a.t), totR = sum(roads.map(r => r.t));
+    const pRoads = '<div class="panel"><div class="panel-head"><div><div class="panel-title">Roads by gravel hauled</div><div class="panel-sub">' + (F.m ? monthLabel() : 'Selected years combined') + ' · ' + roads.length + ' roads · ' + fmtN(totR) + ' t in total</div></div></div>' +
+      (pitBlocked ? '<div class="fnote">Showing all pits: road haulage isn\'t split by pit in the data sent.</div>' : '') +
+      (roads.length ? '<div class="scrollbox">' + roads.map((r, i) => fbar(r.k, r.t, roads[0].t, C.b, fmtN(r.t) + ' t · ' + fmtN(r.n) + ' loads', r.k + '|' + fmtN(r.t) + ' t · ' + fmtN(r.n) + ' loads', 'road:' + r.k, roadState(r.k))).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No haulage in this selection.</div>') + '</div>';
     if (B) {
-      const bks = B.BOOKINGS, st = s => bks.filter(b => b.status === s), openB = bks.filter(isOpen);
+      const bks = F.pit ? B.BOOKINGS.filter(b => b.pit === F.pit) : B.BOOKINGS, st = s => bks.filter(b => b.status === s), openB = bks.filter(isOpen);
       const booked = sum(bks.filter(b => b.status !== 'Cancelled').map(b => b.t)), deliv = sum(bks.filter(b => b.status !== 'Cancelled').map(b => b.del));
       const byMat = m => sum(bks.filter(b => b.mat === m && b.status !== 'Cancelled').map(b => b.t));
       const mats = MATS.concat(Array.from(new Set(bks.map(b => b.mat))).filter(m => m && MATS.indexOf(m) < 0));
-      const overPits = Object.keys(B.PITS).map(id => ({ id:id, t:pitTotals(id) })).filter(x => x.t.over > 0).sort((a, b) => b.t.over - a.t.over);
+      const overAll = Object.keys(B.PITS).map(id => ({ id:id, t:pitTotals(id) })).filter(x => x.t.over > 0).sort((a, b) => b.t.over - a.t.over);
+      const overSel = F.pit ? overAll.filter(x => x.id === F.pit) : overAll;
       h += '<div class="g2">' + pRoads +
-        '<div class="panel"><div class="panel-head"><div><div class="panel-title">Bookings</div><div class="panel-sub">Live position. Not filtered by year.</div></div></div>' +
-        '<div class="mini-row"><div><b>' + openB.length + '</b><span>open</span></div><div><b>' + st('Completed').length + '</b><span>completed</span></div><div><b>' + st('Cancelled').length + '</b><span>cancelled</span></div><div><b style="color:' + (overPits.length ? C.r : 'var(--ink)') + ';">' + fmtN(sum(overPits.map(x => x.t.over))) + ' t</b><span>over-allocated</span></div></div>' +
-        '<div class="sub-head">Booked and delivered</div>' + hbar('Delivered of booked', deliv, booked, C.g, fmtN(deliv) + ' of ' + fmtN(booked) + ' t') +
-        mats.filter(m => byMat(m) > 0 || MATS.indexOf(m) >= 0).map((m, i) => hbar(m, byMat(m), booked, i === 0 ? C.v : C.b, fmtN(byMat(m)) + ' t')).join('') +
-        (overPits.length ? '<div class="sub-head">Over-allocated by pit</div>' + overPits.map(x => hbar(pitOf(x.id).name, x.t.over, overPits[0].t.over, C.r, fmtN(x.t.over) + ' t')).join('') : '<div class="v9-sub" style="padding-top:8px;">Every open booking is covered.</div>') + '</div></div>';
+        '<div class="panel"><div class="panel-head"><div><div class="panel-title">Bookings' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Live position. Not filtered by year or month.</div></div></div>' +
+        '<div class="mini-row"><div><b>' + openB.length + '</b><span>open</span></div><div><b>' + st('Completed').length + '</b><span>completed</span></div><div><b>' + st('Cancelled').length + '</b><span>cancelled</span></div><div><b style="color:' + (overSel.length ? C.r : 'var(--ink)') + ';">' + fmtN(sum(overSel.map(x => x.t.over))) + ' t</b><span>over-allocated</span></div></div>' +
+        '<div class="sub-head">Booked and delivered</div>' + fbar('Delivered of booked', deliv, booked, C.g, fmtN(deliv) + ' of ' + fmtN(booked) + ' t') +
+        mats.filter(m => byMat(m) > 0 || MATS.indexOf(m) >= 0).map((m, i) => fbar(m, byMat(m), booked, i === 0 ? C.v : C.b, fmtN(byMat(m)) + ' t')).join('') +
+        (overAll.length ? '<div class="sub-head">Over-allocated by pit</div>' + overAll.map(x => fbar(pitOf(x.id).name, x.t.over, overAll[0].t.over, C.r, fmtN(x.t.over) + ' t', pitOf(x.id).name + '|' + fmtN(x.t.over) + ' t ' + G.overLabel(), 'pit:' + x.id, pitState(x.id))).join('') : '<div class="v9-sub" style="padding-top:8px;">Every open booking is covered.</div>') + '</div></div>';
     } else {
       h += '<div class="g2 one">' + pRoads + '</div>';
     }
 
-    /* royalties last, on their own period */
-    if (S.royalty && !S.royaltyAmounts && paid > 0) {
-      const pr = rows.filter(r => r.paid > 0 || r.late).sort((a, b) => b.paid - a.paid), mxP = Math.max.apply(null, [1].concat(pr.map(r => r.paid)));
-      h += '<div class="panel"><div class="panel-head"><div><div class="panel-title">Royalty paid by pit</div><div class="panel-sub">Total paid to date' + (S.period ? ' · ' + esc(S.period) : '') + '. Not filtered by calendar year.</div></div></div>' +
+    /* royalties (click a pit) */
+    if (S.royalty && !S.royaltyAmounts && sum(allRows.map(r => r.paid)) > 0) {
+      const pr = allRows.filter(r => r.paid > 0 || r.late).sort((a, b) => b.paid - a.paid), mxP = Math.max.apply(null, [1].concat(pr.map(r => r.paid)));
+      h += '<div class="panel"><div class="panel-head"><div><div class="panel-title">Royalty paid by pit</div><div class="panel-sub">Total paid to date' + (S.period ? ' · ' + esc(S.period) : '') + '. Not filtered by year or month.</div></div></div>' +
         '<div class="mini-row"><div><b>' + money(paid) + '</b><span>paid to date</span></div><div><b>' + rows.filter(r => r.paid > 0).length + '</b><span>pits paid</span></div><div><b style="color:' + (rows.some(r => r.late) ? C.r : 'var(--ink)') + ';">' + rows.filter(r => r.late).length + '</b><span>overdue</span></div></div>' +
-        '<div class="scrollbox">' + pr.map(r => '<div class="hbar-row" data-tip="' + esc(r.pit.name + '|Paid ' + money(r.paid) + (r.dueDate ? '|Due ' + G.fmt(r.dueDate) : '') + (r.late ? '|Overdue' : '')) + '"><div class="hbar-label">' + esc(r.pit.name) + '</div><div class="hbar-track"><div class="hbar-fill" style="width:' + Math.max(1, r.paid / mxP * 100) + '%;background:' + C.vm + ';"></div></div><div class="hbar-val">' + money(r.paid) + (r.late ? ' · <b style="color:' + C.r + ';">overdue</b>' : '') + '</div></div>').join('') + '</div></div>';
+        '<div class="scrollbox">' + pr.map(r => fbar(r.pit.name, r.paid, mxP, C.vm, money(r.paid) + (r.late ? ' · <b style="color:' + C.r + ';">overdue</b>' : ''), r.pit.name + '|Paid ' + money(r.paid) + (r.dueDate ? '|Due ' + G.fmt(r.dueDate) : '') + (r.late ? '|Overdue' : ''), 'pit:' + r.pit.id, pitState(r.pit.id))).join('') + '</div></div>';
     }
     if (S.royaltyAmounts) {
-      const topRows = rows.slice().sort((a, b) => (b.due || 0) - (a.due || 0)), mxD = Math.max.apply(null, [1].concat(topRows.map(r => r.due || 0)));
-      h += '<div class="panel"><div class="panel-head"><div><div class="panel-title">Royalties by pit' + illus() + '</div><div class="panel-sub">' + (S.period ? 'Royalty period ' + esc(S.period) + '. ' : '') + 'Not filtered by calendar year.</div></div></div>' +
+      const topRows = allRows.slice().sort((a, b) => (b.due || 0) - (a.due || 0)), mxD = Math.max.apply(null, [1].concat(topRows.map(r => r.due || 0)));
+      h += '<div class="panel"><div class="panel-head"><div><div class="panel-title">Royalties by pit' + illus() + '</div><div class="panel-sub">' + (S.period ? 'Royalty period ' + esc(S.period) + '. ' : '') + 'Not filtered by year or month.</div></div></div>' +
         '<div class="mini-row"><div><b>' + money(due) + '</b><span>total due</span></div><div><b>' + money(paid) + '</b><span>paid</span></div><div><b>' + money(sum(rows.filter(r => r.s.status !== 'Not required').map(r => Math.max(0, r.bal)))) + '</b><span>balance</span></div>' + (rows.some(r => r.held) ? '<div><b>' + rows.filter(r => r.held).length + '</b><span>held for deeds</span></div>' : '<div><b style="color:' + (rows.some(r => r.late) ? C.r : 'var(--ink)') + ';">' + rows.filter(r => r.late).length + '</b><span>overdue</span></div>') + '</div>' +
-        '<div class="scrollbox">' + topRows.map(r => '<div class="hbar-row" data-tip="' + esc(r.pit.name + '|' + r.owner + '|Due ' + (r.due == null ? 'TBD' : money(r.due)) + '|Paid ' + money(r.paid) + '|Balance ' + money(Math.max(0, r.bal)) + (r.dueDate ? '|Due ' + G.fmt(r.dueDate) : '') + '|' + (r.late ? 'Overdue' : r.s.status) + (r.held ? ', held for deed' : '')) + '"><div class="hbar-label">' + esc(r.pit.name) + '</div><div class="hbar-track"><div class="hbar-fill" style="width:' + Math.max(1, (r.due || 0) / mxD * 100) + '%;background:' + C.vm + ';"></div></div><div class="hbar-val">' + (r.due == null ? 'TBD' : money(r.due)) + (r.paid ? ' · ' + money(r.paid) + ' paid' : '') + (r.late ? ' · <b style="color:' + C.r + ';">overdue</b>' : '') + '</div></div>').join('') + '</div></div>';
+        '<div class="scrollbox">' + topRows.map(r => fbar(r.pit.name, r.due || 0, mxD, C.vm, (r.due == null ? 'TBD' : money(r.due)) + (r.paid ? ' · ' + money(r.paid) + ' paid' : '') + (r.late ? ' · <b style="color:' + C.r + ';">overdue</b>' : ''),
+          r.pit.name + '|' + r.owner + '|Due ' + (r.due == null ? 'TBD' : money(r.due)) + '|Paid ' + money(r.paid) + '|Balance ' + money(Math.max(0, r.bal)) + (r.dueDate ? '|Due ' + G.fmt(r.dueDate) : '') + '|' + (r.late ? 'Overdue' : r.s.status) + (r.held ? ', held for deed' : ''), 'pit:' + r.pit.id, pitState(r.pit.id))).join('') + '</div></div>';
     }
-    root.innerHTML = h;
+    return h;
   }
 
   function boot() {
     const r = G.load(window.DEMO);
+    if (r.waiting) { G.showWaiting(); return; }
     if (r.error) { G.showError(r.error); return; }
     /* years and like for like come from the Power Apps controls, via the payload */
     const v = S.view || {};
@@ -1203,8 +1321,17 @@ var G = (function () {
     ys = Array.from(new Set(ys.filter(y => S.YEARS.indexOf(y) >= 0)));
     YSEL = ys.length ? ys : [S.CUR];
     LFL = !!v.lfl;
+    /* a filter that no longer exists in the new data is dropped */
+    if (F.pit && !regPits().some(p => p.id === F.pit)) F.pit = null;
+    if (F.road && !S.ROADS.some(e => e.road === F.road)) F.road = null;
     render();
   }
+  document.addEventListener('click', e => {
+    const el = e.target.closest ? e.target.closest('[data-f]') : null;
+    if (!el) return;
+    applyF(el.getAttribute('data-f'));
+    render();
+  });
   window.addEventListener('hashchange', boot);
   G.initTips();
   boot();
