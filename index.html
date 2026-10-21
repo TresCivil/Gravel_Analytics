@@ -716,6 +716,12 @@ tr.sel-row td{background:var(--violet-tint);}
   .att-x:hover{background:var(--line-soft);color:var(--ink);}
   .panel.nodata{margin-bottom:16px;border:1px solid #F3D9AE;background:#FFFBF3;}
   .build-tag{margin-top:18px;font-size:10.5px;color:var(--muted);text-align:right;opacity:.8;}
+  /* info icon beside titles */
+  .info-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;border-radius:50%;
+          border:1px solid #B9C0D4;color:#7A839B;font:700 9.5px/1 Georgia,serif;font-style:italic;cursor:help;vertical-align:2px;text-transform:none;letter-spacing:0;}
+  .info-i:hover,.info-i:focus{border-color:var(--violet);color:var(--violet);background:var(--violet-tint);outline:none;}
+  .kpi-label .info-i{vertical-align:1px;}
+  .gtip{max-width:340px;}
   .g2.one{grid-template-columns:1fr;}
   html::-webkit-scrollbar{width:10px;}
   html::-webkit-scrollbar-thumb{background:#CBD1E3;border-radius:6px;border:2px solid transparent;background-clip:padding-box;}
@@ -780,7 +786,7 @@ window.DEMO = null; /* live data only: everything comes from Power Apps via the 
    ========================================================================== */
 var G = (function () {
   'use strict';
-  const BUILD = '21 Oct 19:09';
+  const BUILD = '21 Oct 19:17';
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const MATS = ['3.5 Roadbase', '150 Minus'];
@@ -1088,6 +1094,15 @@ var G = (function () {
   const alertRow = a => '<div class="activity-row"><div class="activity-icon ' + (a.sev === 'crit' ? 'crit' : 'warn') + '">' + icon('alert') + '</div><div class="activity-body"><div class="activity-title">' + esc(a.title) + '</div><div class="activity-meta">' + esc(a.meta) + '</div></div><div class="activity-time">' + a.when + '</div></div>';
 
   /* ---------- hover tooltip: any element with data-tip ("Title|row|row") ---------- */
+  /* info icons: map of [title starts with, explanation]; lines separated by | */
+  function addInfo(root, map) {
+    const put = (el, txt) => { if (el.querySelector('.info-i')) return; const t = el.textContent.trim(); const hit = map.filter(m => t.toLowerCase().indexOf(m[0].toLowerCase()) === 0).sort((x, y) => y[0].length - x[0].length)[0]; if (!hit) return;   /* longest match wins */
+      const i = document.createElement('span'); i.className = 'info-i'; i.setAttribute('tabindex', '0'); i.setAttribute('role', 'button'); i.setAttribute('aria-label', 'How this is calculated');
+      i.setAttribute('data-tip', 'How this works|' + hit[1]); i.textContent = 'i';
+      const badge = el.querySelector('.attention-badge, .illus'); if (badge) el.insertBefore(i, badge); else el.appendChild(i); };
+    root.querySelectorAll('.panel-title').forEach(el => put(el));
+    root.querySelectorAll('.kpi-label').forEach(el => put(el));
+  }
   function initTips() {
     const tip = document.createElement('div'); tip.className = 'gtip'; document.body.appendChild(tip);
     let cur = null;
@@ -1114,7 +1129,17 @@ var G = (function () {
     document.addEventListener('mouseout', e => { if (!e.relatedTarget) hideTip(); });
     window.addEventListener('blur', hideTip);
     window.addEventListener('scroll', hideTip, true);
-    document.addEventListener('click', hideTip, true);
+    document.addEventListener('click', e => {
+      const i = e.target.closest ? e.target.closest('.info-i') : null;
+      if (!i) { hideTip(); return; }
+      e.stopPropagation();
+      const parts = i.getAttribute('data-tip').split('|');
+      tip.innerHTML = '<b>' + esc(parts[0]) + '</b>' + parts.slice(1).map(p => '<div>' + esc(p) + '</div>').join('');
+      const r = i.getBoundingClientRect(); tip.style.opacity = 1;
+      const w = tip.getBoundingClientRect().width, h = tip.getBoundingClientRect().height;
+      let x = r.left, y = r.bottom + 8; if (x + w > window.innerWidth - 6) x = window.innerWidth - w - 6; if (y + h > window.innerHeight - 6) y = r.top - h - 8;
+      tip.style.transform = 'translate(' + Math.max(6, x) + 'px,' + Math.max(6, y) + 'px)';
+    }, true);
   }
 
   /* small diagnostic line at the bottom: build version and what the app sent */
@@ -1132,7 +1157,7 @@ var G = (function () {
 
   return { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmt, fmtN, money, esc, load, regPits, pitOf, prodM, haulM, prodY, haulY, ytd, monthsAvail, stockAt, stockAtP,
            loadsOf, loadsWhere, limitAll, activeRows, pctOf, elapsedPct, delta, isOpen, bal, cover, pitTotals, hasBookings, bkd, capCol, capGauge,
-           colChart, lineChart, donut, spark, legend, hbar, pill, compPill, icon, kpi, illus, overLabel, alerts, alertRow, initTips, showError, showWaiting, footer };
+           colChart, lineChart, donut, spark, legend, hbar, pill, compPill, icon, kpi, illus, overLabel, alerts, alertRow, initTips, showError, showWaiting, footer, addInfo };
 })();
 
 </script>
@@ -1269,11 +1294,33 @@ var G = (function () {
       order.map(cell).join('') + '</div>' + det + '</div>';
   }
 
+
+  const INFO = [
+    ['Crushed', 'Tonnes Produced from the Crushing Production Log, added up for the selected year(s).|With one year selected, compared with the year before (same months when like for like).|Follows any pit, month or road you click (roads don\'t affect crushing).'],
+    ['Hauled', 'Tonnes Removed from the Removal & Haulage Log, added up for the selected year(s).|Compared with the year before when one year is selected.|Follows any pit, month or road you click.'],
+    ['Stockpile', 'Best Available Stock Estimate + all tonnes crushed − all tonnes hauled, up to today (or 31 Dec of a past year, or the end of a clicked month).|Months of cover = stockpile ÷ average tonnes hauled per month over the last 3 months.'],
+    ['Annual limit used', 'Tonnes crushed in the calendar year ÷ the sum of every pit\'s Extraction Limit (t).|Limits are yearly and reset every 1 January. With a pit selected, uses that pit\'s limit.'],
+    ['Est. value crushed', 'Tonnes crushed × $' + 20 + ' per tonne (valuePerT in the Src).|A rough estimate of the gravel\'s value, not a financial figure.'],
+    ['Royalty due', 'Total Due (Ex GST) added up across pits, with Royalty Total Paid ($) underneath.|Current royalty position, not filtered by year.'],
+    ['Royalties overdue', 'Pits whose Royalty Due Date has passed and still have a balance to pay.'],
+    ['Needs attention now', 'Live position, not filtered by year or clicks.|Pits over limit: crushed this calendar year > Extraction Limit.|Owners with open issues: Owner Issues is filled in.|Non-compliant lots: pits marked Non-compliant (excluding Not started).|Deeds awaiting signing: Royalty Deed = Awaiting signing.|Licences: License End within 90 days of today, or already ended.|Royalties overdue: due date passed with a balance remaining.|Click a box to see the list.'],
+    ['Production by month', 'Tonnes crushed in each calendar month, one colour per selected year (up to the latest 4 years).|Click a month to filter the rest of the page to it.'],
+    ['Cumulative production by year', 'Running total of tonnes crushed from 1 January, month by month, for each selected year.|Dashed red line = sum of all pit Extraction Limits (or the selected pit\'s limit).|If a line crosses the red line, more has been crushed than the limits allow.'],
+    ['Crushed, hauled and stockpile', 'Monthly tonnes crushed and hauled across the selected years, in date order.|Stockpile line = Best Available Stock Estimate + crushed − hauled, carried over month to month.|Change over 3 months = this month-end stockpile minus 3 months earlier.|Click a point to filter to that month.'],
+    ['Where the material sits', 'Stockpile per pit = Best Available Stock Estimate + crushed − hauled, at the end of the selected period (today for the current year).|Pits at zero or below are not listed.|Click a pit to filter.'],
+    ['Crushed by pit', 'Tonnes crushed per pit in the selected years, one colour per year, largest first.|Click a pit to filter.'],
+    ['Year on year', 'One row per calendar year from the logs; selected years are highlighted.|Pits producing = pits with any crushing that year. Average = crushed ÷ producing pits.|Peak month = month with the most crushing. Stockpile at end = stockpile at year end (or today).|Share of limit = crushed ÷ sum of pit limits.'],
+    ['Roads by gravel hauled', 'Tonnes Removed grouped by Road Name for the selected years, largest first.|Click a road to filter hauled figures to it.'],
+    ['Bookings', 'Live position from the Bookings table, not filtered by year.|In progress / confirmed / cancelled = count by Booking Status.|Over-allocated = Tonnes Removed above Booked Tonnes.|Delivered of booked = Tonnes Removed ÷ Booked Tonnes, excluding cancelled.'],
+    ['Royalties by pit', 'Total Due (Ex GST) per pit from the Pit Stock Summary, with Royalty Total Paid ($).|Balance = due − paid. Overdue = Royalty Due Date passed and a balance remains.|Held for deeds = Royalty Deed is Awaiting signing.|Not filtered by year.'],
+    ['Royalty paid by pit', 'Royalty Total Paid ($) per pit. Overdue = Royalty Due Date passed and a balance remains.']
+  ];
   /* keep inner scroll positions when the page redraws after a click */
   function render() {
     const root = $('an-root'); if (!root) return;
     const keep = Array.prototype.map.call(root.querySelectorAll('.scrollbox'), el => el.scrollTop);
     root.innerHTML = build();
+    G.addInfo(root, INFO.map(x => x[0] === 'Est. value crushed' ? [x[0], x[1].replace('$20', '$' + S.valuePerT)] : x));
     Array.prototype.forEach.call(root.querySelectorAll('.scrollbox'), (el, i) => { if (keep[i]) el.scrollTop = keep[i]; });
   }
 
