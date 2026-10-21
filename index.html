@@ -837,7 +837,9 @@ var G = (function () {
     else S.ROADS = S.HAUL.filter(e => e.road != null);
     S.hasLoads = S.ROADS.some(e => e.n != null);
 
-    S.YEARS = Array.from(new Set(S.CRUSH.map(e => e.y).concat(S.HAUL.map(e => e.y), S.ROADS.map(e => e.y), [S.CUR]))).filter(y => y <= S.CUR).sort((a, b) => a - b);
+    /* years asked for by the app (year / years) are kept even when they have no records, so the filter always applies */
+    const asked = String(P.years != null && P.years !== '' ? P.years : (P.year != null ? P.year : '')).split(/[,;\s]+/).map(Number).filter(y => y >= 1990 && y <= S.CUR);
+    S.YEARS = Array.from(new Set(S.CRUSH.map(e => e.y).concat(S.HAUL.map(e => e.y), S.ROADS.map(e => e.y), [S.CUR], asked))).filter(y => y <= S.CUR).sort((a, b) => a - b);
     S.PMT = {}; S.HMT = {}; S.SMT = {};
     S.YEARS.forEach(y => { S.PMT[y] = new Array(12).fill(0); S.HMT[y] = new Array(12).fill(0); });
     S.CRUSH.forEach(e => { if (S.PMT[e.y]) S.PMT[e.y][e.m - 1] += e.t; });
@@ -1290,7 +1292,8 @@ var G = (function () {
     const due = sum(rows.map(r => r.due || 0)), paid = sum(rows.map(r => r.paid));
     const scope = (F.m ? ' · ' + monthLabel() : '') + (F.road ? ' · ' + F.road : '');
 
-    let h = filterBar();
+    const empty = ysAll.filter(y => !sum(S.PMT[y] || []) && !sum(S.HMT[y] || []));
+    let h = (empty.length === ysAll.length ? '<div class="panel nodata"><div class="panel-title">No data for ' + ysAll.join(', ') + '</div><div class="panel-sub" style="margin-top:4px;">No crushing or haulage has been recorded in ' + (ysAll.length > 1 ? 'these years' : ysAll[0]) + '. Needs attention, bookings and royalties still show the live position.</div></div>' : '') + filterBar();
     h += '<div class="kpi-row six">' +
       kpi('Crushed' + (fp ? ' · ' + esc(fp.name) : ''), fmtN(prod), 't', single ? dtxt(prod, hasPy ? prodSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(prodBy), single && hasPy && prod >= prodSel(py) ? 'up' : '', 'prod', 'v') +
       kpi('Hauled' + (fp ? ' · ' + esc(fp.name) : '') + (F.road ? ' · ' + esc(F.road) : ''), fmtN(haul), 't', single ? dtxt(haul, hasPy ? haulSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(haulBy), single && hasPy && haul >= haulSel(py) ? 'up' : '', 'truck', 'g') +
@@ -1396,8 +1399,11 @@ var G = (function () {
     if (r.error) { G.showError(r.error); return; }
     /* years and like for like come from the Power Apps controls, via the payload */
     const v = S.view || {};
-    let ys = String(v.years).toLowerCase() === 'all' ? S.YEARS.slice()
-      : (Array.isArray(v.years) ? v.years : (v.years != null && v.years !== '' ? String(v.years).split(/[,;\s]+/) : [])).map(Number);
+    /* accepts years ("2025,2026" or "all"), or the Dashboard's year + allTime */
+    const yv = v.years != null && v.years !== '' ? v.years : v.year;
+    const allT = v.allTime === true || String(v.allTime).toLowerCase() === 'true' || String(yv).toLowerCase() === 'all';
+    let ys = allT ? S.YEARS.slice()
+      : (Array.isArray(yv) ? yv : (yv != null && yv !== '' ? String(yv).split(/[,;\s]+/) : [])).map(Number);
     ys = Array.from(new Set(ys.filter(y => S.YEARS.indexOf(y) >= 0)));
     YSEL = ys.length ? ys : [S.CUR];
     LFL = !!v.lfl;
