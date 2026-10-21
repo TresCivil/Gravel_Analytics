@@ -780,7 +780,7 @@ window.DEMO = null; /* live data only: everything comes from Power Apps via the 
    ========================================================================== */
 var G = (function () {
   'use strict';
-  const BUILD = '21 Oct 19:04';
+  const BUILD = '21 Oct 19:09';
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const MATS = ['3.5 Roadbase', '150 Minus'];
@@ -841,8 +841,8 @@ var G = (function () {
     S.hasLoads = S.ROADS.some(e => e.n != null);
 
     /* years asked for by the app (year / years) are kept even when they have no records, so the filter always applies */
-    const asked = String(P.years != null && P.years !== '' ? P.years : (P.year != null ? P.year : '')).split(/[,;\s]+/).map(Number).filter(y => y >= 1990 && y <= S.CUR);
-    S.YEARS = Array.from(new Set(S.CRUSH.map(e => e.y).concat(S.HAUL.map(e => e.y), S.ROADS.map(e => e.y), [S.CUR], asked))).filter(y => y <= S.CUR).sort((a, b) => a - b);
+    const asked = String(P.years != null && P.years !== '' ? P.years : (P.year != null ? P.year : '')).split(/[,;\s]+/).map(Number).filter(y => y >= 1990 && y <= 2100 && !(P.allTime === true || String(P.allTime).toLowerCase() === 'true'));
+    S.YEARS = Array.from(new Set(S.CRUSH.map(e => e.y).concat(S.HAUL.map(e => e.y), S.ROADS.map(e => e.y), [S.CUR]).filter(y => y <= S.CUR).concat(asked))).sort((a, b) => a - b);
     S.PMT = {}; S.HMT = {}; S.SMT = {};
     S.YEARS.forEach(y => { S.PMT[y] = new Array(12).fill(0); S.HMT[y] = new Array(12).fill(0); });
     S.CRUSH.forEach(e => { if (S.PMT[e.y]) S.PMT[e.y][e.m - 1] += e.t; });
@@ -852,7 +852,7 @@ var G = (function () {
     /* open = starting stock (e.g. Best Available Stock Estimate): stockpile = open + crushed - hauled */
     S.pits.forEach(p => { if (p.open != null) { S.OFF[p.id] = p.open; S.OFFT += p.open; } });
     S.pits.forEach(p => { if (p.open != null || p.stock == null) return; const calc = sum(S.CRUSH.filter(e => e.pit === p.id).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === p.id).map(e => e.t)); S.OFF[p.id] = p.stock - calc; S.OFFT += S.OFF[p.id]; });
-    let run = S.OFFT; S.YEARS.forEach(y => { S.SMT[y] = []; for (let m = 0; m < 12; m++) { run += S.PMT[y][m] - S.HMT[y][m]; S.SMT[y].push(y === S.CUR && m >= S.CURM ? null : run); } });
+    let run = S.OFFT; S.YEARS.forEach(y => { S.SMT[y] = []; for (let m = 0; m < 12; m++) { run += S.PMT[y][m] - S.HMT[y][m]; S.SMT[y].push(y > S.CUR || (y === S.CUR && m >= S.CURM) ? null : run); } });
 
     S.recent = (P.recent || []).map(r => ({ d:isoOf(r.d), pit:str(r.p), road:str(r.r), t:num(r.t) || 0 })).filter(r => r.d).sort((a, b) => D(b.d) - D(a.d));
 
@@ -891,7 +891,7 @@ var G = (function () {
   const prodY = (y, id) => sum(prodM(y, id));
   const haulY = (y, f) => sum(haulM(y, f));
   const ytd = id => prodY(S.CUR, id);
-  const monthsAvail = y => (y < S.CUR ? 12 : S.CURM);
+  const monthsAvail = y => (y === S.CUR ? S.CURM : 12);   /* past and future (forecast) years: all 12 months */
   const stockAt = y => S.OFFT + sum(S.CRUSH.filter(e => e.y <= y).map(e => e.t)) - sum(S.HAUL.filter(e => e.y <= y).map(e => e.t));
   const stockAtP = (y, id) => (S.OFF[id] || 0) + sum(S.CRUSH.filter(e => e.pit === id && e.y <= y).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === id && e.y <= y).map(e => e.t));
   /* loads: the real count when Power Apps sends it, otherwise about 24.6 t a load as in the original */
@@ -1206,6 +1206,7 @@ var G = (function () {
     return '<div class="hbar-row' + (state ? ' is-' + state : '') + '" data-tip="' + esc(tipClick(tip, state === 'sel')) + '" data-f="' + esc(f) + '"><div class="hbar-label" title="' + esc(label) + '">' + esc(label) + '</div><div class="hbar-track hstack">' +
       segs.map(s => (s.v > 0 ? '<div style="width:' + (s.v / max * 100) + '%;background:' + s.color + ';"></div>' : '')).join('') + '</div><div class="hbar-val"><b>' + fmtN(total) + ' t</b></div></div>';
   }
+  const noDataBox = what => '<div class="cell-muted" style="padding:70px 0;text-align:center;">No data for ' + esc(what) + '.</div>';
   const pitState = id => (F.pit ? (F.pit === id ? 'sel' : 'dim') : '');
   const roadState = r => (F.road ? (F.road === r ? 'sel' : 'dim') : '');
 
@@ -1290,17 +1291,22 @@ var G = (function () {
     const prodSel = y => inYear(pmF(y), y), haulSel = y => inYear(hmF(y), y);
     const prodBy = ysAll.map(prodSel), haulBy = ysAll.map(haulSel), prod = sum(prodBy), haul = sum(haulBy);
     const py = ysAll[0] - 1, hasPy = S.YEARS.indexOf(py) >= 0;
-    const dtxt = (cur, prev) => { if (!single) return ''; if (!hasPy) return 'First year of data'; const d = delta(cur, prev); return d == null ? 'No ' + py + ' figure to compare' : (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '% vs ' + (F.m ? MON[F.m - 1] + ' ' : '') + py + (LFL && !F.m ? ' same months' : (last === S.CUR && !F.m ? ' full year' : '')); };
+    const dtxt = (cur, prev) => { if (!single) return ''; if (!cur) return ysAll[0] > S.CUR ? 'Forecast year: nothing recorded yet' : 'Nothing recorded'; if (!hasPy) return 'First year of data'; const d = delta(cur, prev); return d == null ? 'No ' + py + ' figure to compare' : (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '% vs ' + (F.m ? MON[F.m - 1] + ' ' : '') + py + (LFL && !F.m ? ' same months' : (last === S.CUR && !F.m ? ' full year' : '')); };
     const byYear = arr => ys.map((y, i) => y + ' ' + fmtN(arr[arr.length - ys.length + i])).join(' · ') + (more ? ' · +' + (ysAll.length - 4) + ' earlier' : '');
     const SS = F.pit ? stockSeries(F.pit) : S.SMT;
     const tl = timeline(ys), cr = tl.map(p => pmF(p.y)[p.m - 1]), hl = tl.map(p => hmF(p.y)[p.m - 1]), sk = tl.map(p => SS[p.y][p.m - 1]);
     const selIdx = F.m ? tl.findIndex(p => p.m === F.m && p.y === (F.y || last)) : -1;
-    const stockEnd = selIdx >= 0 ? (sk[selIdx] || 0) : (sk[sk.length - 1] || 0);
-    const stockLab = selIdx >= 0 ? 'at end of ' + MON[F.m - 1] + ' ' + (F.y || last) : (last === S.CUR ? 'today' : 'at 31 Dec ' + last);
+    /* a future (forecast) year has no stockpile of its own yet: show today's */
+    const lastActual = [].concat(sk).reverse().find(v => v != null);
+    const stockToday = (SS[S.CUR] || [])[S.CURM - 1] || 0;
+    const stockEnd = selIdx >= 0 ? (sk[selIdx] || 0) : (last > S.CUR ? stockToday : (lastActual || 0));
+    const stockLab = selIdx >= 0 ? 'at end of ' + MON[F.m - 1] + ' ' + (F.y || last) : (last >= S.CUR ? 'today' : 'at 31 Dec ' + last);
     const hCov = F.road ? tl.map(p => (F.pit ? haulM(p.y, e => e.pit === F.pit) : haulM(p.y))[p.m - 1]) : hl;
     const upto = selIdx >= 0 ? selIdx + 1 : hl.length, h3 = hCov.slice(Math.max(0, upto - 3), upto), avgH = h3.length ? sum(h3) / h3.length : 0, cover = avgH > 0 && stockEnd > 0 ? stockEnd / avgH : null;
     const due = sum(rows.map(r => r.due || 0)), paid = sum(rows.map(r => r.paid));
     const scope = (F.m ? ' · ' + monthLabel() : '') + (F.road ? ' · ' + F.road : '');
+    const selLabel = ysAll.join(', ') + (fp ? ' · ' + fp.name : '') + (F.m ? ' · ' + monthLabel() : '') + (F.road ? ' · ' + F.road : '');
+    const anyProd = ys.some(y => sum(pmF(y)) > 0), anyTl = sum(cr) + sum(hl) > 0 || sk.some(v => v);
 
     const empty = ysAll.filter(y => !sum(S.PMT[y] || []) && !sum(S.HMT[y] || []));
     let h = (empty.length === ysAll.length ? '<div class="panel nodata"><div class="panel-title">No data for ' + ysAll.join(', ') + '</div><div class="panel-sub" style="margin-top:4px;">No crushing or haulage has been recorded in ' + (ysAll.length > 1 ? 'these years' : ysAll[0]) + '. Needs attention, bookings and royalties still show the live position.</div></div>' : '') + filterBar();
@@ -1322,20 +1328,20 @@ var G = (function () {
     const cumOf = (arr, n) => { let c = 0; return arr.map((v, i) => (i < n ? (c += v) : null)); };
     const mSel = F.m ? F.m - 1 : null;
     h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Production by month' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Tonnes crushed per month' + (single ? ', ' + ys[0] : ', years side by side') + '</div></div></div>' +
-      colChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], vals:pmF(y).map((v, i) => (i < monthsAvail(y) ? v : null)) })), { h:250, tipCat:i => MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1) }) + legend(ys.map(y => [String(y), YCOL[y]])) + '</div>' +
+      (anyProd ? colChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], vals:pmF(y).map((v, i) => (i < monthsAvail(y) ? v : null)) })), { h:250, tipCat:i => MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1) }) : noDataBox(selLabel)) + legend(ys.map(y => [String(y), YCOL[y]])) + '</div>' +
       '<div class="panel"><div class="panel-head"><div><div class="panel-title">Cumulative production by year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Running total through the year against the limit for ' + (fp ? 'this pit' : 'all open pits') + '</div></div></div>' +
-      lineChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], w:3, vals:cumOf(pmF(y), monthsAvail(y)) })), { h:250, tipCat:i => 'To the end of ' + MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1), hline:lim ? { v:lim, label:(fp ? 'Limit for ' + fp.name + ' ' : 'Limit for all open pits ') + fmtN(lim) + ' t' } : null }) + legend(ys.map(y => [String(y), YCOL[y]])) +
+      (anyProd ? lineChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], w:3, vals:cumOf(pmF(y), monthsAvail(y)) })), { h:250, tipCat:i => 'To the end of ' + MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1), hline:lim ? { v:lim, label:(fp ? 'Limit for ' + fp.name + ' ' : 'Limit for all open pits ') + fmtN(lim) + ' t' } : null }) : noDataBox(selLabel)) + legend(ys.map(y => [String(y), YCOL[y]])) +
       '<div class="v9-note">' + (fp ? esc(fp.name) + (fp.limit ? ' has a ' + fmtN(fp.limit) + ' t limit a year.' : ' has no limit set.') : 'All ' + R.filter(p => p.limit).length + ' open pits with a limit add up to ' + fmtN(limAll) + ' t a year.') + ' Pit limits are assumed to be the same in every year.</div></div></div>';
 
     /* continuous crushed, hauled, stockpile timeline (click a point) */
     const trend = sk.length > 3 ? (sk[upto - 1] || 0) - (sk[Math.max(0, upto - 4)] || 0) : null, many = tl.length > 14;
     h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Crushed, hauled and stockpile' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One continuous timeline for the selected years. The stockpile is ' + (S.OFFT ? 'the starting stock plus everything crushed, less everything hauled' : 'everything crushed less everything hauled') + ', so it carries over from month to month.' + (F.road ? ' Hauled shows ' + esc(F.road) + ' only.' : '') + '</div></div></div>' +
       '<div class="mini-row"><div><b>' + fmtN(stockEnd) + ' t</b><span>stockpile ' + stockLab + (stockEnd < 0 ? '<em style="display:block;font-style:normal;font-weight:600;font-size:11.5px;color:' + C.r + ';margin-top:2px;">Below zero: more hauled than crushed in the logs</em>' : '') + '</span></div><div><b>' + (cover ? cover.toFixed(1) : '-') + '</b><span>months of cover at the last 3 months of haulage</span></div><div><b style="color:' + (trend != null && trend > 0 ? C.a : C.g) + ';">' + (trend == null ? '-' : (trend > 0 ? '+' : '') + fmtN(trend) + ' t') + '</b><span>' + (trend != null && trend > 0 ? 'rising over 3 months: crushing is ahead of haulage' : 'change over 3 months') + '</span></div></div>' +
-      lineChart(tl.map(p => mLab(p.y, p.m)), [{ name:'Crushed', color:C.v, vals:cr }, { name:'Hauled', color:C.b, vals:hl }, { name:'Stockpile at month end', color:C.a, dash:true, vals:sk }], { w:1000, h:270, labelEvery:many ? 3 : 1, nodots:many, tipCat:i => MONTH_FULL[tl[i].m - 1] + ' ' + tl[i].y, sel:selIdx >= 0 ? selIdx : null, f:i => 'ym:' + tl[i].y + '-' + tl[i].m }) +
+      (anyTl ? lineChart(tl.map(p => mLab(p.y, p.m)), [{ name:'Crushed', color:C.v, vals:cr }, { name:'Hauled', color:C.b, vals:hl }, { name:'Stockpile at month end', color:C.a, dash:true, vals:sk }], { w:1000, h:270, labelEvery:many ? 3 : 1, nodots:many, tipCat:i => MONTH_FULL[tl[i].m - 1] + ' ' + tl[i].y, sel:selIdx >= 0 ? selIdx : null, f:i => 'ym:' + tl[i].y + '-' + tl[i].m }) : noDataBox(selLabel)) +
       legend([['Crushed', C.v], ['Hauled', C.b], ['Stockpile at month end', C.a]]) + '</div>';
 
     /* where the material sits (stock at the selected month end) and crushed by pit (click a pit) */
-    const sy = F.m ? (F.y || last) : last, sm = F.m ? F.m : (sy === S.CUR ? S.CURM : 12);
+    const sy0 = F.m ? (F.y || last) : last, sy = Math.min(sy0, S.CUR), sm = F.m && sy0 <= S.CUR ? F.m : (sy === S.CUR ? S.CURM : 12);
     const sitting = R.map(p => ({ p:p, t:stockAtPM(p.id, sy, sm) })).filter(x => x.t > 0).sort((a, b) => b.t - a.t);
     const byPit = R.map(p => ({ p:p, segs:ys.map(y => ({ name:String(y), color:YCOL[y], v:inYear(prodM(y, p.id), y) })) })).map(x => { x.total = sum(x.segs.map(s => s.v)); return x; }).filter(x => x.total > 0).sort((a, b) => b.total - a.total);
     h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Where the material sits</div><div class="panel-sub">Stockpile by pit ' + (F.m ? 'at end of ' + MON[sm - 1] + ' ' + sy : stockLab) + ': crushed and not yet hauled · ' + sitting.length + ' pits</div></div></div>' +
