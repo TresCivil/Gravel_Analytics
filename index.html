@@ -714,6 +714,7 @@ tr.sel-row td{background:var(--violet-tint);}
   .att-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .att-x{cursor:pointer;font-size:20px;line-height:1;color:var(--muted);padding:2px 6px;border-radius:6px;}
   .att-x:hover{background:var(--line-soft);color:var(--ink);}
+  .panel.nodata{margin-bottom:16px;border:1px solid #F3D9AE;background:#FFFBF3;}
   .g2.one{grid-template-columns:1fr;}
   html::-webkit-scrollbar{width:10px;}
   html::-webkit-scrollbar-thumb{background:#CBD1E3;border-radius:6px;border:2px solid transparent;background-clip:padding-box;}
@@ -754,7 +755,8 @@ window.DEMO = null; /* live data only: everything comes from Power Apps via the 
      today:"2026-10-20",
      pits:[{ id:"389", name:"Rodney Ball Pit", loc:"Monto", status:"Under production" | "Completed" | "Not started",
              comp:"Compliant" | "Non-compliant" | "Not yet tested", owner:"Kenneth Ball",
-             limit:5000, stockEst:5363.7, last:"2026-08-25", stock:1142 }],     // stock = stockpile on hand (t)
+             limit:5000, stockEst:5363.7, last:"2026-08-25",
+             open:5363.7 }],   // open = starting stock: stockpile = open + crushed - hauled  (or stock = stockpile on hand today)
      crush:[{ p:"389", m:"2026-08", t:512.4 }],             // tonnes crushed, one row per pit per month
      haul:[{ p:"389", m:"2026-08", t:310.2 }],              // tonnes hauled, one row per pit per month
      roads:[{ r:"Walkers Creek Road", m:"2026-08", t:310.2, n:13 }],   // tonnes hauled per road per month (n = loads, optional)
@@ -811,16 +813,20 @@ var G = (function () {
     if (P && P.__error) return { error:'The data sent from Power Apps could not be read. Check the JSON in the Src formula.' };
     if (!P && !demo) return { waiting:true };
     S.demo = !P; P = P || demo;
-    S.view = { years:P.years, lfl:P.lfl === true || String(P.lfl).toLowerCase() === 'true' };
+    S.view = { allTime:P.allTime, year:P.year, years:P.years, lfl:P.lfl === true || String(P.lfl).toLowerCase() === 'true' };
 
     const now = new Date();
     S.TODAY = isoOf(P.today) || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'));
     S.CUR = parseInt(S.TODAY.slice(0, 4), 10); S.CURM = parseInt(S.TODAY.slice(5, 7), 10);
     S.valuePerT = num(P.valuePerT) || 20;
 
+    /* tidy pit status and compliance wording so small differences in capitals or spacing still count */
+    const key = v => str(v).toLowerCase().replace(/[\s_-]+/g, '');
+    const normPitStatus = v => ({ underproduction:'Under production', inproduction:'Under production', active:'Under production', producing:'Under production', completed:'Completed', complete:'Completed', closed:'Completed', notstarted:'Not started', notyetstarted:'Not started', pending:'Not started' })[key(v)] || str(v);
+    const normComp = v => ({ compliant:'Compliant', pass:'Compliant', passed:'Compliant', noncompliant:'Non-compliant', notcompliant:'Non-compliant', fail:'Non-compliant', failed:'Non-compliant', notyettested:'Not yet tested', nottested:'Not yet tested', untested:'Not yet tested', '':'' })[key(v)] ?? str(v);
     S.pits = (P.pits || []).map(p => ({
-      id:str(p.id), name:str(p.name) || ('Pit ' + str(p.id)), loc:str(p.loc), status:str(p.status), comp:str(p.comp) || 'Not yet tested',
-      owner:str(p.owner), limit:num(p.limit), stockEst:num(p.stockEst), last:isoOf(p.last), stock:num(p.stock)
+      id:str(p.id), name:str(p.name) || ('Pit ' + str(p.id)), loc:str(p.loc), status:normPitStatus(p.status), comp:normComp(p.comp) || 'Not yet tested',
+      owner:str(p.owner), limit:num(p.limit), stockEst:num(p.stockEst), last:isoOf(p.last), stock:num(p.stock), open:num(p.open)
     })).filter(p => p.id);
 
     const ym = v => { const i = isoOf(v); return i ? { y:parseInt(i.slice(0, 4), 10), m:parseInt(i.slice(5, 7), 10) } : null; };
@@ -838,7 +844,9 @@ var G = (function () {
     S.HAUL.forEach(e => { if (S.HMT[e.y]) S.HMT[e.y][e.m - 1] += e.t; });
     /* opening stock: if a pit sends its stockpile on hand today, the logs' running total is lined up to it */
     S.OFF = {}; S.OFFT = 0;
-    S.pits.forEach(p => { if (p.stock == null) return; const calc = sum(S.CRUSH.filter(e => e.pit === p.id).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === p.id).map(e => e.t)); S.OFF[p.id] = p.stock - calc; S.OFFT += S.OFF[p.id]; });
+    /* open = starting stock (e.g. Best Available Stock Estimate): stockpile = open + crushed - hauled */
+    S.pits.forEach(p => { if (p.open != null) { S.OFF[p.id] = p.open; S.OFFT += p.open; } });
+    S.pits.forEach(p => { if (p.open != null || p.stock == null) return; const calc = sum(S.CRUSH.filter(e => e.pit === p.id).map(e => e.t)) - sum(S.HAUL.filter(e => e.pit === p.id).map(e => e.t)); S.OFF[p.id] = p.stock - calc; S.OFFT += S.OFF[p.id]; });
     let run = S.OFFT; S.YEARS.forEach(y => { S.SMT[y] = []; for (let m = 0; m < 12; m++) { run += S.PMT[y][m] - S.HMT[y][m]; S.SMT[y].push(y === S.CUR && m >= S.CURM ? null : run); } });
 
     S.recent = (P.recent || []).map(r => ({ d:isoOf(r.d), pit:str(r.p), road:str(r.r), t:num(r.t) || 0 })).filter(r => r.d).sort((a, b) => D(b.d) - D(a.d));
@@ -850,6 +858,7 @@ var G = (function () {
     S.bookings = Array.isArray(P.bookings) ? P.bookings.map(b => ({
       id:str(b.id), pit:str(b.p), mat:normMat(b.mat), t:num(b.t) || 0, del:num(b.del) || 0, req:isoOf(b.req), on:isoOf(b.on) || isoOf(b.req), status:normStatus(b.status), road:str(b.r), by:str(b.by)
     })) : null;
+    S.bookingsAll = S.bookings;   /* pages filter S.bookings by the Required by date; alerts use all */
     S.overRule = P.overRule || (S.demo ? 'stock' : 'hauled');
     S.bstock = Array.isArray(P.bstock) ? P.bstock.map(x => ({ pit:str(x.p), mat:str(x.mat), t:num(x.t) || 0 })) : null;
 
@@ -1262,7 +1271,10 @@ var G = (function () {
     if (F.y && ysAll.indexOf(F.y) < 0) { F.m = null; F.y = null; }
 
     const R = regPits(), limAll = limitAll(), fp = F.pit ? pitOf(F.pit) : null, lim = fp ? (fp.limit || 0) : limAll;
-    const B = bkd(), allRows = S.royalty || [], rows = F.pit ? allRows.filter(r => r.pit.id === F.pit) : allRows, AL = alerts();
+    /* bookings follow the selected years (and a clicked month) by their Required by date; alerts use all bookings */
+    const AL = (() => { S.bookings = S.bookingsAll; return alerts(); })();
+    S.bookings = S.bookingsAll;   /* as in the mock-up: bookings are the live position, not filtered by year */
+    const B = bkd(), allRows = S.royalty || [], rows = F.pit ? allRows.filter(r => r.pit.id === F.pit) : allRows;
     const prodSel = y => inYear(pmF(y), y), haulSel = y => inYear(hmF(y), y);
     const prodBy = ysAll.map(prodSel), haulBy = ysAll.map(haulSel), prod = sum(prodBy), haul = sum(haulBy);
     const py = ysAll[0] - 1, hasPy = S.YEARS.indexOf(py) >= 0;
@@ -1282,7 +1294,7 @@ var G = (function () {
     h += '<div class="kpi-row six">' +
       kpi('Crushed' + (fp ? ' · ' + esc(fp.name) : ''), fmtN(prod), 't', single ? dtxt(prod, hasPy ? prodSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(prodBy), single && hasPy && prod >= prodSel(py) ? 'up' : '', 'prod', 'v') +
       kpi('Hauled' + (fp ? ' · ' + esc(fp.name) : '') + (F.road ? ' · ' + esc(F.road) : ''), fmtN(haul), 't', single ? dtxt(haul, hasPy ? haulSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(haulBy), single && hasPy && haul >= haulSel(py) ? 'up' : '', 'truck', 'g') +
-      kpi('Stockpile ' + stockLab, fmtN(stockEnd), 't', cover ? cover.toFixed(1) + ' months of cover at recent haulage' : 'Crushed less hauled, all years', '', 'stack', 'v') +
+      kpi('Stockpile ' + stockLab, fmtN(stockEnd), 't', cover ? cover.toFixed(1) + ' months of cover at recent haulage' : (S.OFFT ? 'Starting stock + crushed − hauled' : 'Crushed less hauled, all years'), '', 'stack', 'v') +
       kpi('Annual limit used in calendar year ' + last + (fp ? ' · ' + esc(fp.name) : ''), lim ? pctOf(prodY(last, F.pit || undefined), lim) + '%' : '–', '', lim ? ys.map(y => y + ' ' + pctOf(prodY(y, F.pit || undefined), lim) + '%').join(' · ') + ' of ' + fmtN(lim) + ' t' : (fp ? 'No limit set for this pit' : 'No pit limits recorded'), '', 'gauge', 'a') +
       kpi('Est. value crushed', '$' + Math.round(prod * S.valuePerT / 1000).toLocaleString('en-AU') + 'k', '', 'At about $' + S.valuePerT + ' per tonne' + illus(), '', 'dollar', 'a') +
       (S.royaltyAmounts ? kpi('Royalty due' + (fp ? ' · ' + esc(fp.name) : ''), money(due), '', money(paid) + ' paid · current period, not filtered by year' + illus(), '', 'dollar', 'g')
@@ -1304,7 +1316,7 @@ var G = (function () {
 
     /* continuous crushed, hauled, stockpile timeline (click a point) */
     const trend = sk.length > 3 ? (sk[upto - 1] || 0) - (sk[Math.max(0, upto - 4)] || 0) : null, many = tl.length > 14;
-    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Crushed, hauled and stockpile' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One continuous timeline for the selected years. The stockpile is everything crushed less everything hauled, so it carries over from month to month.' + (F.road ? ' Hauled shows ' + esc(F.road) + ' only.' : '') + '</div></div></div>' +
+    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Crushed, hauled and stockpile' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One continuous timeline for the selected years. The stockpile is ' + (S.OFFT ? 'the starting stock plus everything crushed, less everything hauled' : 'everything crushed less everything hauled') + ', so it carries over from month to month.' + (F.road ? ' Hauled shows ' + esc(F.road) + ' only.' : '') + '</div></div></div>' +
       '<div class="mini-row"><div><b>' + fmtN(stockEnd) + ' t</b><span>stockpile ' + stockLab + (stockEnd < 0 ? '<em style="display:block;font-style:normal;font-weight:600;font-size:11.5px;color:' + C.r + ';margin-top:2px;">Below zero: more hauled than crushed in the logs</em>' : '') + '</span></div><div><b>' + (cover ? cover.toFixed(1) : '-') + '</b><span>months of cover at the last 3 months of haulage</span></div><div><b style="color:' + (trend != null && trend > 0 ? C.a : C.g) + ';">' + (trend == null ? '-' : (trend > 0 ? '+' : '') + fmtN(trend) + ' t') + '</b><span>' + (trend != null && trend > 0 ? 'rising over 3 months: crushing is ahead of haulage' : 'change over 3 months') + '</span></div></div>' +
       lineChart(tl.map(p => mLab(p.y, p.m)), [{ name:'Crushed', color:C.v, vals:cr }, { name:'Hauled', color:C.b, vals:hl }, { name:'Stockpile at month end', color:C.a, dash:true, vals:sk }], { w:1000, h:270, labelEvery:many ? 3 : 1, nodots:many, tipCat:i => MONTH_FULL[tl[i].m - 1] + ' ' + tl[i].y, sel:selIdx >= 0 ? selIdx : null, f:i => 'ym:' + tl[i].y + '-' + tl[i].m }) +
       legend([['Crushed', C.v], ['Hauled', C.b], ['Stockpile at month end', C.a]]) + '</div>';
@@ -1328,8 +1340,8 @@ var G = (function () {
       return { y:a, prod:sum(p), haul:sum(hh), loads:loadsF(e => e.y === a && idx.indexOf(e.m - 1) >= 0), pits:pits, avg:pits ? Math.round(sum(p) / pits) : 0,
                peak:sum(p) ? MON[idx[pk]] + ' ' + fmtN(p[pk]) + ' t' : '-', stock:(SS[a] && SS[a][endM - 1]) || 0, share:lim ? pctOf(sum(p), lim) + '%' : '–' };
     });
-    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Year on year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One row per calendar year' + (F.m ? ', ' + MONTH_FULL[F.m - 1] + ' only' : (LFL ? ', January to ' + MONTH_FULL[cut - 1] + ' of each year' : '')) + (F.road ? ' · hauled and loads for ' + esc(F.road) : '') + '. Selected years are highlighted.</div></div></div><div class="table-scroll scrollbox"><table><thead><tr><th>Year</th><th>Crushed (t)</th><th>Hauled (t)</th><th>Loads</th><th>Pits producing</th><th>Average per producing pit (t)</th><th>Peak month</th><th>Stockpile at end (t)</th><th>Share of ' + (fp ? 'pit' : 'annual') + ' limit</th></tr></thead><tbody>' +
-      yy.map(r => '<tr' + (YSEL.indexOf(r.y) >= 0 ? ' class="sel-row"' : '') + '><td class="cell-strong">' + r.y + (r.y === S.CUR && !LFL && !F.m ? ' to date' : '') + '</td><td>' + fmtN(r.prod) + '</td><td>' + fmtN(r.haul) + '</td><td>' + fmtN(r.loads) + '</td><td>' + r.pits + '</td><td>' + fmtN(r.avg) + '</td><td>' + r.peak + '</td><td>' + fmtN(r.stock) + '</td><td>' + r.share + '</td></tr>').join('') +
+    h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Year on year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One row per calendar year' + (F.m ? ', ' + MONTH_FULL[F.m - 1] + ' only' : (LFL ? ', January to ' + MONTH_FULL[cut - 1] + ' of each year' : '')) + (F.road ? ' · hauled' + (S.hasLoads ? ' and loads' : '') + ' for ' + esc(F.road) : '') + '. Selected years are highlighted.</div></div></div><div class="table-scroll scrollbox"><table><thead><tr><th>Year</th><th>Crushed (t)</th><th>Hauled (t)</th>' + (S.hasLoads ? '<th>Loads</th>' : '') + '<th>Pits producing</th><th>Average per producing pit (t)</th><th>Peak month</th><th>Stockpile at end (t)</th><th>Share of ' + (fp ? 'pit' : 'annual') + ' limit</th></tr></thead><tbody>' +
+      yy.map(r => '<tr' + (YSEL.indexOf(r.y) >= 0 ? ' class="sel-row"' : '') + '><td class="cell-strong">' + r.y + (r.y === S.CUR && !LFL && !F.m ? ' to date' : '') + '</td><td>' + fmtN(r.prod) + '</td><td>' + fmtN(r.haul) + '</td>' + (S.hasLoads ? '<td>' + fmtN(r.loads) + '</td>' : '') + '<td>' + r.pits + '</td><td>' + fmtN(r.avg) + '</td><td>' + r.peak + '</td><td>' + fmtN(r.stock) + '</td><td>' + r.share + '</td></tr>').join('') +
       '</tbody></table></div><div class="v9-note">' + S.CUR + ' is year to date.</div></div>';
 
     /* roads (click a road) and bookings */
@@ -1338,7 +1350,7 @@ var G = (function () {
     const roads = Object.keys(rg).map(k => ({ k:k, t:rg[k], n:(S.hasLoads ? Math.round(sum(S.ROADS.filter(e => e.road === k && ys.indexOf(e.y) >= 0 && inMonthF(e) && (!F.pit || pitBlocked || e.pit === F.pit)).map(e => (e.n != null ? e.n : e.t / 24.6)))) : Math.round(rg[k] / 24.6)) })).sort((a, b) => b.t - a.t), totR = sum(roads.map(r => r.t));
     const pRoads = '<div class="panel"><div class="panel-head"><div><div class="panel-title">Roads by gravel hauled</div><div class="panel-sub">' + (F.m ? monthLabel() : 'Selected years combined') + ' · ' + roads.length + ' roads · ' + fmtN(totR) + ' t in total</div></div></div>' +
       (pitBlocked ? '<div class="fnote">Showing all pits: road haulage isn\'t split by pit in the data sent.</div>' : '') +
-      (roads.length ? '<div class="scrollbox">' + roads.map((r, i) => fbar(r.k, r.t, roads[0].t, C.b, fmtN(r.t) + ' t · ' + fmtN(r.n) + ' loads', r.k + '|' + fmtN(r.t) + ' t · ' + fmtN(r.n) + ' loads', 'road:' + r.k, roadState(r.k))).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No haulage in this selection.</div>') + '</div>';
+      (roads.length ? '<div class="scrollbox">' + roads.map((r, i) => fbar(r.k, r.t, roads[0].t, C.b, fmtN(r.t) + ' t' + (S.hasLoads ? ' · ' + fmtN(r.n) + ' loads' : ''), r.k + '|' + fmtN(r.t) + ' t' + (S.hasLoads ? ' · ' + fmtN(r.n) + ' loads' : ''), 'road:' + r.k, roadState(r.k))).join('') + '</div>' : '<div class="cell-muted" style="padding:8px 0;">No haulage in this selection.</div>') + '</div>';
     if (B) {
       const bks = F.pit ? B.BOOKINGS.filter(b => b.pit === F.pit) : B.BOOKINGS, st = s => bks.filter(b => b.status === s), openB = bks.filter(isOpen);
       const booked = sum(bks.filter(b => b.status !== 'Cancelled').map(b => b.t)), deliv = sum(bks.filter(b => b.status !== 'Cancelled').map(b => b.del));
