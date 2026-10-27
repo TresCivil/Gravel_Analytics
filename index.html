@@ -848,7 +848,9 @@ var G = (function () {
     const normComp = v => ({ compliant:'Compliant', pass:'Compliant', passed:'Compliant', noncompliant:'Non-compliant', notcompliant:'Non-compliant', fail:'Non-compliant', failed:'Non-compliant', notyettested:'Not yet tested', nottested:'Not yet tested', untested:'Not yet tested', '':'' })[key(v)] ?? str(v);
     S.pits = (P.pits || []).map(p => ({
       id:str(p.id), name:str(p.name) || ('Pit ' + str(p.id)), loc:str(p.loc), status:normPitStatus(p.status), comp:normComp(p.comp) || 'Not yet tested',
-      owner:str(p.owner), limit:num(p.limit), stockEst:num(p.stockEst), last:isoOf(p.last), stock:num(p.stock), open:num(p.open)
+      owner:str(p.owner), limit:num(p.limit), stockEst:num(p.stockEst), last:isoOf(p.last), stock:num(p.stock), open:num(p.open),
+      /* Pit Status = Open (2026-10-27). An older app version sends no status, so then every pit counts */
+      po:p.ps == null ? true : str(p.ps).trim().toLowerCase() === 'open'
     })).filter(p => p.id);
 
     const ym = v => { const i = isoOf(v); return i ? { y:parseInt(i.slice(0, 4), 10), m:parseInt(i.slice(5, 7), 10) } : null; };
@@ -916,7 +918,10 @@ var G = (function () {
   /* loads: the real count when Power Apps sends it, otherwise about 24.6 t a load as in the original */
   const loadsOf = t => Math.round(t / 24.6);
   const loadsWhere = f => { const rows = (S.ROADS.length ? S.ROADS : S.HAUL).filter(f); return S.hasLoads ? Math.round(sum(rows.map(e => (e.n != null ? e.n : e.t / 24.6)))) : loadsOf(sum(rows.map(e => e.t))); };
-  const limitAll = () => sum(S.pits.map(p => p.limit || 0));
+  /* annual limit used: Open pits only, for both the limit total and the tonnes crushed */
+  const limitAll = () => sum(S.pits.filter(p => p.po).map(p => p.limit || 0));
+  const prodOpenM = y => { const o = new Set(S.pits.filter(p => p.po).map(p => p.id)), a = new Array(12).fill(0); S.CRUSH.forEach(e => { if (e.y === y && o.has(e.pit)) a[e.m - 1] += e.t; }); return a; };
+  const prodOpenY = y => sum(prodOpenM(y));
   const activeRows = () => S.pits.filter(p => p.status !== 'Not started');
   const pctOf = (v, lim) => (lim ? Math.round(v / lim * 100) : null);
   const elapsedPct = y => (y < S.CUR ? 100 : Math.round((D(S.TODAY) - D(S.CUR + '-01-01') + 1) / 365 * 100));
@@ -1082,7 +1087,8 @@ var G = (function () {
       const overs = B.BOOKINGS.filter(b => (S.overRule === 'hauled' || isOpen(b)) && cover(b).kind === 'over' || (isOpen(b) && cover(b).kind === 'pending')), ot = sum(Object.keys(B.PITS).map(id => pitTotals(id).over));
       if (overs.length) out.push({ sev:'warn', title:overs.length + ' booking' + (overs.length === 1 ? ' is' : 's are') + ' over-allocated', meta:S.overRule === 'hauled' ? fmtN(ot) + ' t hauled beyond the booked tonnes (' + overs.map(b => b.id).slice(0, 4).join(', ') + (overs.length > 4 ? '…' : '') + ').' : fmtN(ot) + ' t is booked that has not been crushed yet.', when:'Now' });
     }
-    R.filter(p => p.comp === 'Non-compliant').forEach(p => out.push({ sev:'crit', title:p.name + ' has a non-compliant lot', meta:'Failed testing. Hold the lot and retest before further haulage.', when:'Testing' }));
+    /* same rule as Needs attention on Analytics: Not started pits are left out */
+    R.filter(p => p.status !== 'Not started' && p.comp === 'Non-compliant').forEach(p => out.push({ sev:'crit', title:p.name + ' has a non-compliant lot', meta:'Failed testing. Hold the lot and retest before further haulage.', when:'Testing' }));
     if (S.owners) {
       const priv = S.owners.filter(o => o.type === 'Private'), waiting = priv.filter(o => o.deed === 'Awaiting signing'), held = sum(rows.filter(r => r.held).map(r => Math.max(0, r.bal)));
       if (waiting.length && priv.length) out.push({ sev:'warn', title:waiting.length + ' of ' + priv.length + ' private owners are awaiting a signed Deed of Variation', meta:(S.royaltyAmounts ? money(held) + ' of royalty is held until the deeds are signed.' : 'Royalty is held until the deeds are signed.'), when:'Owners' });
@@ -1230,7 +1236,7 @@ var G = (function () {
   function showError(msg) { const root = document.getElementById('an-root') || document.getElementById('dash-root'); const f = document.getElementById('demo-flag'); if (f) f.hidden = true; if (!root) return; root.innerHTML = '<div><div class="panel" style="border:1px solid #F0D3D3;"><div class="panel-title">Could not load the data</div><div class="panel-sub" style="margin-top:6px;">' + esc(msg) + '</div></div></div>'; }
 
   return { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmt, fmtN, money, esc, load, regPits, pitOf, prodM, haulM, prodY, haulY, ytd, monthsAvail, stockAt, stockAtP,
-           loadsOf, loadsWhere, limitAll, activeRows, pctOf, elapsedPct, delta, isOpen, bal, cover, pitTotals, hasBookings, bkd, capCol, capGauge,
+           loadsOf, loadsWhere, limitAll, prodOpenY, prodOpenM, activeRows, pctOf, elapsedPct, delta, isOpen, bal, cover, pitTotals, hasBookings, bkd, capCol, capGauge,
            colChart, lineChart, donut, spark, legend, hbar, pill, compPill, icon, kpi, illus, overLabel, alerts, alertRow, initTips, showError, showWaiting, footer, addInfo, sortable };
 })();
 
@@ -1239,7 +1245,7 @@ var G = (function () {
 (function () {
   'use strict';
   const { MON, MONTH_FULL, MATS, EXPIRY_DAYS, C, S, $, sum, D, fmtN, money, esc, regPits, pitOf, prodM, haulM, prodY, monthsAvail,
-          limitAll, pctOf, delta, isOpen, pitTotals, bkd, colChart, lineChart, legend, kpi, illus, alerts } = G;
+          limitAll, prodOpenY, prodOpenM, pctOf, delta, isOpen, pitTotals, bkd, colChart, lineChart, legend, kpi, illus, alerts } = G;
   const PAL = ['#D9CDEE', '#B9A5DA', '#8168B4', '#54397F'];
   let YSEL = null, LFL = false;
   const YCOL = {};
@@ -1373,17 +1379,17 @@ var G = (function () {
     ['Crushed', 'Tonnes Produced from the Crushing Production Log, added up for the selected year(s).|With one year selected, compared with the year before (same months when like for like).|Follows any pit, month or road you click (roads don\'t affect crushing).'],
     ['Hauled', 'Tonnes Removed from the Removal & Haulage Log, added up for the selected year(s).|Compared with the year before when one year is selected.|Follows any pit, month or road you click.'],
     ['Stockpile', 'Best Available Stock Estimate + all tonnes crushed − all tonnes hauled, up to today (or 31 Dec of a past year, or the end of a clicked month).|Months of cover = stockpile ÷ average tonnes hauled per month over the last 3 months.'],
-    ['Annual limit used', 'Tonnes crushed in the calendar year ÷ the sum of every pit\'s Extraction Limit (t).|Limits are yearly and reset every 1 January. With a pit selected, uses that pit\'s limit.'],
+    ['Annual limit used', 'Tonnes crushed in the calendar year at pits with Pit Status = Open ÷ the sum of those pits\' Extraction Limit (t).|Limits are yearly and reset every 1 January. With a pit selected, uses that pit\'s limit.'],
     ['Est. value crushed', 'Tonnes crushed × $' + 20 + ' per tonne (valuePerT in the Src).|A rough estimate of the gravel\'s value, not a financial figure.'],
     ['Royalty due', 'Total Due (Ex GST) added up across pits, with Royalty Total Paid ($) underneath.|Current royalty position, not filtered by year.'],
     ['Royalties overdue', 'Pits whose Royalty Due Date has passed and still have a balance to pay.'],
     ['Needs attention now', 'Live position, not filtered by year or clicks.|Pits over limit: crushed this calendar year > Extraction Limit.|Owners with open issues: Owner Issues is filled in.|Non-compliant lots: pits marked Non-compliant (excluding Not started).|Deeds awaiting signing: Royalty Deed = Awaiting signing.|Licences: License End within 90 days of today, or already ended.|Royalties overdue: due date passed with a balance remaining.|Click a box to see the list.'],
     ['Production by month', 'Tonnes crushed in each calendar month, one colour per selected year (up to the latest 4 years).|Click a month to filter the rest of the page to it.'],
-    ['Cumulative production by year', 'Running total of tonnes crushed from 1 January, month by month, for each selected year.|Dashed red line = sum of all pit Extraction Limits (or the selected pit\'s limit).|If a line crosses the red line, more has been crushed than the limits allow.'],
+    ['Cumulative production by year', 'Running total of tonnes crushed at pits with Pit Status = Open from 1 January, month by month, for each selected year (or the selected pit).|Dashed red line = sum of the Open pits\' Extraction Limits (or the selected pit\'s limit).|If a line crosses the red line, more has been crushed than the limits allow.'],
     ['Crushed, hauled and stockpile', 'Monthly tonnes crushed and hauled across the selected years, in date order.|Stockpile line = Best Available Stock Estimate + crushed − hauled, carried over month to month.|Change over 3 months = this month-end stockpile minus 3 months earlier.|Click a point to filter to that month.'],
     ['Where the material sits', 'Stockpile per pit = Best Available Stock Estimate + crushed − hauled, at the end of the selected period (today for the current year).|Pits at zero or below are not listed.|Click a pit to filter.'],
     ['Crushed by pit', 'Tonnes crushed per pit in the selected years, one colour per year, largest first.|Click a pit to filter.'],
-    ['Year on year', 'One row per calendar year from the logs; selected years are highlighted.|Pits producing = pits with any crushing that year. Average = crushed ÷ producing pits.|Peak month = month with the most crushing. Stockpile at end = stockpile at year end (or today).|Share of limit = crushed ÷ sum of pit limits.'],
+    ['Year on year', 'One row per calendar year from the logs; selected years are highlighted.|Pits producing = pits with any crushing that year. Average = crushed ÷ producing pits.|Peak month = month with the most crushing. Stockpile at end = stockpile at year end (or today).|Share of limit = crushed at Open pits ÷ sum of the Open pits\' limits (or the selected pit\'s crushing ÷ its limit).'],
     ['Roads by gravel hauled', 'Tonnes Removed grouped by Road Name for the selected years, largest first.|Click a road to filter hauled figures to it.'],
     ['Bookings', 'Live position from the Bookings table, not filtered by year.|In progress / confirmed / cancelled = count by Booking Status.|Over-allocated = Tonnes Removed above Booked Tonnes.|Delivered of booked = Tonnes Removed ÷ Booked Tonnes, excluding cancelled.'],
     ['Royalties by pit', 'Total Due (Ex GST) per pit from the Pit Stock Summary, with Royalty Total Paid ($).|Balance = due − paid. Overdue = Royalty Due Date passed and a balance remains.|Held for deeds = Royalty Deed is Awaiting signing.|Not filtered by year.'],
@@ -1439,7 +1445,7 @@ var G = (function () {
       kpi('Crushed' + (fp ? ' · ' + esc(fp.name) : ''), fmtN(prod), 't', single ? dtxt(prod, hasPy ? prodSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(prodBy), single && hasPy && prod >= prodSel(py) ? 'up' : '', 'prod', 'v') +
       kpi('Hauled' + (fp ? ' · ' + esc(fp.name) : '') + (F.road ? ' · ' + esc(F.road) : ''), fmtN(haul), 't', single ? dtxt(haul, hasPy ? haulSel(py) : 0) + (F.m ? ' · ' + monthLabel() : '') : byYear(haulBy), single && hasPy && haul >= haulSel(py) ? 'up' : '', 'truck', 'g') +
       kpi('Stockpile ' + stockLab, fmtN(stockEnd), 't', cover ? cover.toFixed(1) + ' months of cover at recent haulage' : (S.OFFT ? 'Starting stock + crushed − hauled' : 'Crushed less hauled, all years'), '', 'stack', 'v') +
-      kpi('Annual limit used in calendar year ' + last + (fp ? ' · ' + esc(fp.name) : ''), lim ? pctOf(prodY(last, F.pit || undefined), lim) + '%' : '–', '', lim ? ys.map(y => y + ' ' + pctOf(prodY(y, F.pit || undefined), lim) + '%').join(' · ') + ' of ' + fmtN(lim) + ' t' : (fp ? 'No limit set for this pit' : 'No pit limits recorded'), '', 'gauge', 'a') +
+      kpi('Annual limit used in calendar year ' + last + (fp ? ' · ' + esc(fp.name) : ''), lim ? pctOf(fp ? prodY(last, F.pit) : prodOpenY(last), lim) + '%' : '–', '', lim ? ys.map(y => y + ' ' + pctOf(fp ? prodY(y, F.pit) : prodOpenY(y), lim) + '%').join(' · ') + ' of ' + fmtN(lim) + ' t' : (fp ? 'No limit set for this pit' : 'No pit limits recorded'), '', 'gauge', 'a') +
       kpi('Est. value crushed', '$' + Math.round(prod * S.valuePerT / 1000).toLocaleString('en-AU') + 'k', '', 'At about $' + S.valuePerT + ' per tonne' + illus(), '', 'dollar', 'a') +
       (S.royaltyAmounts ? kpi('Royalty due' + (fp ? ' · ' + esc(fp.name) : ''), money(due), '', money(paid) + ' paid · current period, not filtered by year' + illus(), '', 'dollar', 'g')
         : S.royalty ? kpi('Royalties overdue', String(rows.filter(r => r.late).length), '', (paid > 0 ? money(paid) + ' paid to date · ' : '') + rows.filter(r => r.dueDate).length + ' pits with a due date', rows.some(r => r.late) ? 'warn' : '', 'dollar', 'g')
@@ -1454,9 +1460,9 @@ var G = (function () {
     const mSel = F.m ? F.m - 1 : null;
     h += '<div class="g2"><div class="panel"><div class="panel-head"><div><div class="panel-title">Production by month' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Tonnes crushed per month' + (single ? ', ' + ys[0] : ', years side by side') + '</div></div></div>' +
       (anyProd ? colChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], vals:pmF(y).map((v, i) => (i < monthsAvail(y) ? v : null)) })), { h:250, tipCat:i => MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1) }) : noDataBox(selLabel)) + legend(ys.map(y => [String(y), YCOL[y]])) + '</div>' +
-      '<div class="panel"><div class="panel-head"><div><div class="panel-title">Cumulative production by year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">Running total through the year against the limit for ' + (fp ? 'this pit' : 'all open pits') + '</div></div></div>' +
-      (anyProd ? lineChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], w:3, vals:cumOf(pmF(y), monthsAvail(y)) })), { h:250, tipCat:i => 'To the end of ' + MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1), hline:lim ? { v:lim, label:(fp ? 'Limit for ' + fp.name + ' ' : 'Limit for all open pits ') + fmtN(lim) + ' t' } : null }) : noDataBox(selLabel)) + legend(ys.map(y => [String(y), YCOL[y]])) +
-      '<div class="v9-note">' + (fp ? esc(fp.name) + (fp.limit ? ' has a ' + fmtN(fp.limit) + ' t limit a year.' : ' has no limit set.') : 'All ' + R.filter(p => p.limit).length + ' open pits with a limit add up to ' + fmtN(limAll) + ' t a year.') + ' Pit limits are assumed to be the same in every year.</div></div></div>';
+      '<div class="panel"><div class="panel-head"><div><div class="panel-title">Cumulative production by year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">' + (fp ? 'Running total through the year against the limit for this pit' : 'Crushing at Open pits, running total through the year against their limit') + '</div></div></div>' +
+      (anyProd ? lineChart(MON, ys.map(y => ({ name:String(y), color:YCOL[y], w:3, vals:cumOf(fp ? pmF(y) : prodOpenM(y), monthsAvail(y)) })), { h:250, tipCat:i => 'To the end of ' + MONTH_FULL[i], sel:mSel, f:i => 'm:' + (i + 1), hline:lim ? { v:lim, label:(fp ? 'Limit for ' + fp.name + ' ' : 'Limit for Open pits ') + fmtN(lim) + ' t' } : null }) : noDataBox(selLabel)) + legend(ys.map(y => [String(y), YCOL[y]])) +
+      '<div class="v9-note">' + (fp ? esc(fp.name) + (fp.limit ? ' has a ' + fmtN(fp.limit) + ' t limit a year.' : ' has no limit set.') : 'All ' + R.filter(p => p.po && p.limit).length + ' Open pits with a limit add up to ' + fmtN(limAll) + ' t a year.') + ' Pit limits are assumed to be the same in every year.</div></div></div>';
 
     /* continuous crushed, hauled, stockpile timeline (click a point) */
     const trend = sk.length > 3 ? (sk[upto - 1] || 0) - (sk[Math.max(0, upto - 4)] || 0) : null, many = tl.length > 14;
@@ -1482,7 +1488,7 @@ var G = (function () {
       const pits = new Set(S.CRUSH.filter(e => e.y === a && idx.indexOf(e.m - 1) >= 0 && (!F.pit || e.pit === F.pit)).map(e => e.pit)).size;
       const endM = F.m ? F.m : n;
       return { y:a, prod:sum(p), haul:sum(hh), loads:loadsF(e => e.y === a && idx.indexOf(e.m - 1) >= 0), pits:pits, avg:pits ? Math.round(sum(p) / pits) : 0,
-               peak:sum(p) ? MON[idx[pk]] + ' ' + fmtN(p[pk]) + ' t' : '-', stock:(SS[a] && SS[a][endM - 1]) || 0, share:lim ? pctOf(sum(p), lim) + '%' : '–' };
+               peak:sum(p) ? MON[idx[pk]] + ' ' + fmtN(p[pk]) + ' t' : '-', stock:(SS[a] && SS[a][endM - 1]) || 0, share:lim ? pctOf(fp ? sum(p) : (po => sum(idx.map(i => po[i])))(prodOpenM(a)), lim) + '%' : '–' };   /* no pit picked: Open pits only, like the limit */
     });
     h += '<div class="panel" style="margin-bottom:16px;"><div class="panel-head"><div><div class="panel-title">Year on year' + (fp ? ' · ' + esc(fp.name) : '') + '</div><div class="panel-sub">One row per calendar year' + (F.m ? ', ' + MONTH_FULL[F.m - 1] + ' only' : (LFL ? ', January to ' + MONTH_FULL[cut - 1] + ' of each year' : '')) + (F.road ? ' · hauled' + (S.hasLoads ? ' and loads' : '') + ' for ' + esc(F.road) : '') + '. Selected years are highlighted.</div></div></div><div class="table-scroll scrollbox"><table><thead><tr><th>Year</th><th>Crushed (t)</th><th>Hauled (t)</th>' + (S.hasLoads ? '<th>Loads</th>' : '') + '<th>Pits producing</th><th>Average per producing pit (t)</th><th>Peak month</th><th>Stockpile at end (t)</th><th>Share of ' + (fp ? 'pit' : 'annual') + ' limit</th></tr></thead><tbody>' +
       yy.map(r => '<tr' + (YSEL.indexOf(r.y) >= 0 ? ' class="sel-row"' : '') + '><td class="cell-strong">' + r.y + (r.y === S.CUR && !LFL && !F.m ? ' to date' : '') + '</td><td>' + fmtN(r.prod) + '</td><td>' + fmtN(r.haul) + '</td>' + (S.hasLoads ? '<td>' + fmtN(r.loads) + '</td>' : '') + '<td>' + r.pits + '</td><td>' + fmtN(r.avg) + '</td><td>' + r.peak + '</td><td>' + fmtN(r.stock) + '</td><td>' + r.share + '</td></tr>').join('') +
